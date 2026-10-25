@@ -1,0 +1,27 @@
+# Firebase App Hosting backend config (deploys on every push to main).
+# No secrets are needed: Vertex AI is reached through the backend's service account (ENG-02).
+
+runConfig:
+  minInstances: 0
+  maxInstances: 4
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  # Names this deployment; with it, the server refuses AI_PROVIDER=fixture (AI-05).
+  - variable: APP_ENV
+    value: production
+    availability: [RUNTIME]
+  - variable: AI_PROVIDER
+    value: vertex
+    availability: [RUNTIME]
+  - variable: GEMINI_MODEL
+    value: gemini-2.5-flash
+    availability: [RUNTIME]
+  - variable: GOOGLE_CLOUD_LOCATION
+    value: us-central1
+    availability: [RUNTIME]
+  - variable: AI_DAILY_CAP
+    value: "2000"
+    availability: [RUNTIME]

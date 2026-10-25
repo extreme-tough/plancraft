@@ -1,0 +1,10 @@
+rules_version = '2';
+
+// S0: deny everything. Slice S9 opens the owner's moodboard path (EM-67).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

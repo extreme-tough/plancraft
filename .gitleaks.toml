@@ -1,0 +1,10 @@
+title = "PlanCraft gitleaks config"
+
+[extend]
+useDefault = true
+
+# The Firebase web config (NEXT_PUBLIC_FIREBASE_*) is public by design and referrer-restricted;
+# .env.example only ever holds empty placeholders.
+[allowlist]
+description = "Example env file with empty placeholders"
+paths = ['''\.env\.example$''']
