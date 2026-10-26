@@ -47,6 +47,18 @@ In **Google Cloud console → APIs & Services → Credentials**, edit the browse
 pnpm exec firebase deploy --only firestore:rules,firestore:indexes,storage --project <PROJECT_ID>
 ```
 
-## 6. Nightly demo reset (slice S8)
+## 6. Expire old rate-limit counters
+
+Rate-limit counters (`/usage/{day}/counters/*`) carry an `expiresAt` field. Turn on a TTL policy so Firestore deletes them automatically:
+
+```bash
+gcloud firestore fields ttls update expiresAt --collection-group=counters --enable-ttl --project <PROJECT_ID>
+```
+
+## 7. Check the client IP header after the first deploy
+
+Demo-account AI limits count per IP (ENG-08). `TRUSTED_PROXY_HOPS` (default 2) says how many proxies append to `X-Forwarded-For` in front of the app. After the first deploy, log one request's `X-Forwarded-For` and confirm the client's address is that many entries from the right; adjust the variable in `apphosting.yaml` if not.
+
+## 8. Nightly demo reset (slice S8)
 
 Cloud Scheduler calls `POST /api/internal/demo-reset` at 3:00 AM IST with an OIDC token. The exact `gcloud scheduler jobs create http` command is added here in S8.

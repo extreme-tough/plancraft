@@ -21,16 +21,23 @@ export interface CspOptions {
   isDev: boolean;
   /** Firebase Auth domain hosting the sign-in popup iframe, e.g. "plancraft.firebaseapp.com". */
   authDomain?: string | undefined;
+  /** Local Firebase emulators (tests and local development only; refused in production by env.ts). */
+  emulators?: boolean;
 }
 
-export function buildCsp({ nonce, isDev, authDomain }: CspOptions): string {
+export const EMULATOR_ORIGINS: readonly string[] = ["http://127.0.0.1:9099", "http://127.0.0.1:8080"];
+
+export function buildCsp({ nonce, isDev, authDomain, emulators = false }: CspOptions): string {
   const scriptSrc = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
   if (isDev) scriptSrc.push("'unsafe-eval'");
 
   const connectSrc = ["'self'", ...FIREBASE_CONNECT_HOSTS];
   if (isDev) connectSrc.push("ws:");
+  if (emulators) connectSrc.push(...EMULATOR_ORIGINS);
 
-  const frameSrc = authDomain ? [`https://${authDomain}`] : ["'none'"];
+  const frameSrc = authDomain ? [`https://${authDomain}`] : [];
+  if (emulators) frameSrc.push(EMULATOR_ORIGINS[0] as string);
+  if (frameSrc.length === 0) frameSrc.push("'none'");
 
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],

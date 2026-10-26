@@ -1,8 +1,107 @@
 rules_version = '2';
 
-// S0: deny everything. Slice S2 adds per-user isolation for users/{uid}/** (EM-59).
+// EM-59: every user's data lives under users/{uid}/** and only that user can touch it.
+// The shared demo account (uid "demo-shared") is an ordinary user here: it sees only demo data,
+// and Google users never see it. /usage/** and /demo/** are written by the server's Admin SDK only.
+// EM-62: an update must carry exactly the next version, so a stale write is refused here too.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function str(value, max) {
+      return value is string && value.size() <= max;
+    }
+
+    function list(value, max) {
+      return value is list && value.size() <= max;
+    }
+
+    function validEvent(e, uid, eventId) {
+      return e.keys().hasOnly([
+          'schemaVersion', 'id', 'version', 'isDemo', 'demoPinned', 'useCase', 'eventType',
+          'occasion', 'location', 'eventDate', 'currency', 'budget', 'guestCount', 'parts',
+          'answers', 'description', 'lines', 'tasks', 'assumptions', 'openQuestions',
+          'teamNotes', 'dismissedAlerts'])
+        && e.keys().hasAll([
+          'schemaVersion', 'id', 'version', 'isDemo', 'demoPinned', 'useCase', 'eventType',
+          'occasion', 'location', 'eventDate', 'currency', 'budget', 'guestCount', 'parts',
+          'answers', 'description', 'lines', 'tasks', 'assumptions', 'openQuestions',
+          'teamNotes', 'dismissedAlerts'])
+        && e.schemaVersion == 1
+        && e.id == eventId
+        && e.version is int && e.version >= 0
+        && e.isDemo == (uid == 'demo-shared')
+        && e.demoPinned is bool
+        && e.useCase in ['small_celebration', 'wedding', 'community']
+        && e.eventType in ['birthday', 'milestone_birthday', 'anniversary', 'wedding', 'community_gathering', 'other']
+        && str(e.occasion, 120) && e.occasion.size() > 0
+        && e.location is map && str(e.location.city, 80) && str(e.location.country, 2)
+        && e.eventDate is string && e.eventDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && e.currency is string && e.currency.matches('^[A-Z]{3}$')
+        && e.budget is int && e.budget > 0 && e.budget <= 10000000000000
+        && e.guestCount is int && e.guestCount >= 1 && e.guestCount <= 10000
+        && list(e.parts, 4)
+        && e.answers is map
+        && str(e.description, 2000)
+        && list(e.lines, 60)
+        && list(e.tasks, 80)
+        && list(e.assumptions, 10)
+        && list(e.openQuestions, 5)
+        && str(e.teamNotes, 2000)
+        && list(e.dismissedAlerts, 50);
+    }
+
+    function validQuote(q, quoteId) {
+      return q.keys().hasOnly(['id', 'lineId', 'source', 'rawText', 'extraction', 'manual',
+          'convertedTotal', 'cancelled', 'note', 'createdAt'])
+        && q.id == quoteId
+        && q.source in ['paste', 'docx', 'pdf']
+        && str(q.rawText, 20000)
+        && q.cancelled is bool
+        && str(q.note, 1000);
+    }
+
+    function validProposal(p, eventId, proposalId) {
+      return p.keys().hasOnly(['id', 'eventId', 'kind', 'name', 'baseVersion', 'changes',
+          'requestText', 'deterministicOps', 'options', 'interpretation', 'assumptions',
+          'selectedOption'])
+        && p.id == proposalId
+        && p.eventId == eventId
+        && p.kind in ['revision', 'scenario']
+        && p.baseVersion is int
+        && list(p.changes, 3)
+        && (p.requestText == null || str(p.requestText, 500))
+        && list(p.deterministicOps, 20)
+        && list(p.options, 3)
+        && list(p.assumptions, 5);
+    }
+
+    match /users/{uid}/events/{eventId} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && validEvent(request.resource.data, uid, eventId)
+        && request.resource.data.version == 0
+        // Only the nightly reset (Admin SDK) pins the demo event (EM-63).
+        && request.resource.data.demoPinned == false;
+      allow update: if isOwner(uid)
+        && validEvent(request.resource.data, uid, eventId)
+        && request.resource.data.version == resource.data.version + 1
+        && request.resource.data.demoPinned == resource.data.demoPinned;
+
+      match /quotes/{quoteId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validQuote(request.resource.data, quoteId);
+      }
+
+      match /proposals/{proposalId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validProposal(request.resource.data, eventId, proposalId);
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

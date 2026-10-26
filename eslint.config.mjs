@@ -26,6 +26,19 @@ const eslintConfig = [
       "react/no-danger": "error",
       "no-restricted-syntax": ["error", ...rawHtmlBans],
       eqeqeq: ["error", "always"],
+      // EM-60: linking would hand the shared demo account to one person.
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "firebase/auth",
+              importNames: ["linkWithPopup", "linkWithRedirect", "linkWithCredential", "linkWithPhoneNumber"],
+              message: "Never link accounts: the shared demo account must stay unlinked (EM-60).",
+            },
+          ],
+        },
+      ],
     },
   },
   {

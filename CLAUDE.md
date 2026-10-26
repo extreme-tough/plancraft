@@ -140,7 +140,9 @@ pnpm check:bundle  # after a build: first-load JS under 250 KB gzipped (ENG-11)
 **Local machine notes:**
 - This checkout lives on an exFAT drive, so `pnpm-workspace.yaml` uses `nodeLinker: hoisted` because exFAT has no symlinks. New dependency build scripts must be approved with `pnpm approve-builds`.
 - Before `pnpm build` or `pnpm test:e2e`, preload the readlink shim, because Node's `readlink` returns `EISDIR` on exFAT: `$env:NODE_OPTIONS = "--require ./scripts/exfat-readlink-shim.cjs"`. CI (Linux) doesn't need it.
-- `pnpm test:rules` needs JDK 21 or newer for the Firebase emulators.
+- `pnpm test:rules` and `pnpm test:e2e` need JDK 21 or newer for the Firebase emulators. JDK 21 is installed at `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot`, but `JAVA_HOME` still points at JDK 17, so set `JAVA_HOME` and `PATH` to the JDK 21 path for those runs.
+- **Production builds on this exFAT drive are unreliable, even with the shim.** Sometimes a module is missing from the server bundle, and `/` returns a 500 with "Cannot read properties of undefined (reading 'call')". Build and run E2E from a copy on an NTFS drive (or move the repo there). CI on Linux is unaffected.
+- E2E runs with 2 workers (`playwright.config.ts`). More browsers at once overload the local emulators and make the auth tests flaky.
 
 ## Deployment
 

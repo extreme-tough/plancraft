@@ -11,6 +11,7 @@ export function middleware(request: NextRequest): NextResponse {
     nonce,
     isDev: process.env.NODE_ENV === "development",
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    emulators: process.env.NEXT_PUBLIC_FIREBASE_EMULATORS === "1",
   });
 
   const requestHeaders = new Headers(request.headers);
