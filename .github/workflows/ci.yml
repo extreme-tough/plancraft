@@ -27,8 +27,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      # S1 switches this to `pnpm test:coverage`, once src/domain exists to carry the 90% gate.
-      - run: pnpm test
+      # Unit, property and contract tests, with the src/domain coverage gate (ENG-07).
+      - run: pnpm test:coverage
       - run: pnpm check:size
 
   rules:
