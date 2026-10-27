@@ -19,9 +19,27 @@ env:
   - variable: GEMINI_MODEL
     value: gemini-2.5-flash
     availability: [RUNTIME]
+  - variable: GOOGLE_CLOUD_PROJECT
+    value: plant-care-copilot
+    availability: [RUNTIME]
   - variable: GOOGLE_CLOUD_LOCATION
     value: us-central1
     availability: [RUNTIME]
   - variable: AI_DAILY_CAP
     value: "2000"
     availability: [RUNTIME]
+
+  # Firebase web config: public by design, inlined into the browser bundle at build time (ENG-02).
+  # The API key is restricted in Google Cloud to the Hosting domains and Firebase APIs (docs/setup.md §4).
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBe6hHnEkhECGMdomN90fEw7egcrUnoNMs
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: plant-care-copilot.firebaseapp.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: plant-care-copilot
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:562722919365:web:16f7915befab2b07dfb1ac
+    availability: [BUILD, RUNTIME]

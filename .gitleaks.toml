@@ -3,8 +3,10 @@ title = "PlanCraft gitleaks config"
 [extend]
 useDefault = true
 
-# The Firebase web config (NEXT_PUBLIC_FIREBASE_*) is public by design and referrer-restricted;
-# .env.example only ever holds empty placeholders.
+# The Firebase web config (NEXT_PUBLIC_FIREBASE_*) is public by design and referrer-restricted.
+# .env.example only ever holds empty placeholders, and apphosting.yaml carries that one public key,
+# allowed by its exact value so any other key in any file is still reported.
 [allowlist]
-description = "Example env file with empty placeholders"
+description = "Example env placeholders and the public Firebase web API key"
 paths = ['''\.env\.example$''']
+regexes = ['''AIzaSyBe6hHnEkhECGMdomN90fEw7egcrUnoNMs''']
