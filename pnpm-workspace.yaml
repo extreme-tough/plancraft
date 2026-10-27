@@ -3,3 +3,8 @@ allowBuilds:
   protobufjs: false
   re2: false
   unrs-resolver: true
+# Security fixes in transitive dependencies (pnpm audit --audit-level high, ENG-01).
+# next pins postcss 8.4.31; the Firestore SDK pulls an older @grpc/grpc-js. Both are same-major bumps.
+overrides:
+  postcss@<8.5.18: ^8.5.18
+  '@grpc/grpc-js@<1.13.6': ^1.13.6

@@ -49,8 +49,13 @@ describe("apphosting.yaml (the live deployment)", () => {
   });
 
   it("holds no secrets in plain values (ENG-02)", () => {
+    // NEXT_PUBLIC_* values ship to every browser (the Firebase web config is public by design);
+    // anything else named like a credential must come from Secret Manager.
     const suspicious = config.env.filter(
-      (entry) => /KEY|SECRET|TOKEN|PASSWORD/i.test(entry.variable) && entry.value !== undefined,
+      (entry) =>
+        /KEY|SECRET|TOKEN|PASSWORD/i.test(entry.variable) &&
+        !entry.variable.startsWith("NEXT_PUBLIC_") &&
+        entry.value !== undefined,
     );
     expect(suspicious).toEqual([]);
   });
