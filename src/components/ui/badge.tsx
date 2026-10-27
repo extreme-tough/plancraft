@@ -22,7 +22,7 @@ export const badgeVariants = cva(
       },
       variant: {
         default:
-          "bg-primary text-primary-foreground [button&,a&]:hover:bg-primary/90",
+          "bg-primary text-primary-foreground [button&,a&]:hover:bg-primary-hover",
         destructive:
           "bg-destructive text-white [button&,a&]:hover:bg-destructive/90",
         error:

@@ -25,6 +25,8 @@
 
   --primary: #5b5fc7;
   --primary-foreground: #ffffff;
+  /* Hover and pressed go darker (DESIGN.md primary), never lighter: white on #5b5fc7 at 90% is 4.39:1. */
+  --primary-hover: #4246ad;
   --secondary: #ececff;
   --secondary-foreground: #161a30;
   --muted: #f4f2ff;
@@ -71,6 +73,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);

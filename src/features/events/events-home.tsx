@@ -1,19 +1,21 @@
 "use client";
 
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, Plus, Users } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import type { EventPlan } from "@/domain/schemas";
-import { formatMoneyCompact } from "@/domain/format";
+import { formatDate, formatMoneyCompact } from "@/domain/format";
 import { useSignedIn } from "@/features/auth/auth-provider";
 import { useLocale } from "@/lib/locale";
 
 type Load = { state: "loading" } | { state: "error"; message: string } | { state: "ready"; events: EventPlan[] };
 
-/** The signed-in user's events (EM-39, EM-40). Event creation arrives with the event form. */
+/** The signed-in user's events (EM-39, EM-40), and the way into creating one (EM-01). */
 export function EventsHome(): React.ReactElement {
   const { repository } = useSignedIn();
   const locale = useLocale();
@@ -32,9 +34,15 @@ export function EventsHome(): React.ReactElement {
 
   return (
     <section aria-labelledby="events-heading" className="flex flex-col gap-4">
-      <h1 id="events-heading" className="font-bold text-2xl sm:text-3xl">
-        Your events
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 id="events-heading" className="font-bold text-2xl sm:text-3xl">
+          Your events
+        </h1>
+        <Button render={<Link href="/events/new" />}>
+          <Plus aria-hidden="true" />
+          Create an event
+        </Button>
+      </div>
 
       <div aria-live="polite">
         {load.state === "loading" && (
@@ -55,7 +63,7 @@ export function EventsHome(): React.ReactElement {
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle>No events yet</CardTitle>
-            <CardDescription>Creating an event, with a plan built from your answers, is coming next.</CardDescription>
+            <CardDescription>Create an event to get a budget and task plan built from your answers.</CardDescription>
           </CardHeader>
         </Card>
       )}
@@ -66,15 +74,19 @@ export function EventsHome(): React.ReactElement {
             <li key={event.id}>
               <Card className="h-full shadow-card">
                 <CardHeader>
-                  <CardTitle>{event.occasion}</CardTitle>
+                  <CardTitle>
+                    <Link href={`/events/${event.id}`} className="rounded-sm underline-offset-4 hover:underline">
+                      {event.occasion}
+                    </Link>
+                  </CardTitle>
                   <CardDescription className="flex flex-wrap gap-3">
                     <span className="inline-flex items-center gap-1">
                       <CalendarDays aria-hidden="true" className="size-4" />
-                      {event.eventDate}
+                      {formatDate(event.eventDate, locale)}
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Users aria-hidden="true" className="size-4" />
-                      {event.guestCount} guests
+                      {event.guestCount.toLocaleString(locale)} guests
                     </span>
                     <Badge variant="outline">{formatMoneyCompact(event.budget, event.currency, locale)}</Badge>
                   </CardDescription>

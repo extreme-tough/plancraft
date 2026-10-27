@@ -142,6 +142,28 @@ function shift(whole: string, fraction: string, power: number): string {
   return remaining ? `${digits}.${remaining}` : digits;
 }
 
+/** The field error for a failed parse (EM-38 d: never silently zero). */
+export function amountErrorMessage(
+  error: Extract<AmountParseResult, { kind: "error" }>,
+  currency: string,
+): string {
+  switch (error.code) {
+    case "empty":
+      return "Enter an amount.";
+    case "negative":
+      return "The amount can't be negative.";
+    case "currency_mismatch":
+      // EM-38 (b): the wording comes from the spec.
+      return `This event uses ${currency}. Currency conversion isn't supported.`;
+    case "ambiguous":
+      return `${currency} has three decimal places, so this could mean thousands or units. Type it without the separator, for example 8000.`;
+    case "too_large":
+      return "That amount is too large.";
+    case "invalid":
+      return "Enter a number, for example 800000, 8 lakh or 15k.";
+  }
+}
+
 export function parseAmount(input: string, currency: string, locale?: string): AmountParseResult {
   const text = normalize(input).trim();
   if (text === "") return { kind: "error", code: "empty" };

@@ -2,4 +2,3 @@ allowBuilds:
   '@firebase/util': true
   protobufjs: false
   unrs-resolver: true
-nodeLinker: hoisted

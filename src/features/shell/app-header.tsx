@@ -1,6 +1,6 @@
 "use client";
 
-import { LogIn, LogOut, Users } from "lucide-react";
+import { LogIn, LogOut, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -37,7 +37,10 @@ export function AppHeader(): React.ReactElement {
   return (
     <header className="border-b bg-card/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
-        <Link href="/" className="rounded-md font-bold font-heading text-lg text-foreground">
+        <Link href="/" className="flex items-center gap-2 rounded-md font-bold font-heading text-lg text-foreground">
+          <span aria-hidden="true" className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-card">
+            <Sparkles className="size-4" />
+          </span>
           PlanCraft
         </Link>
         <div className="flex flex-wrap items-center gap-2">

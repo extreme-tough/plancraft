@@ -1,3 +1,4 @@
+import type { IsoDate } from "./dates";
 import { minorToMajor, type Minor } from "./money";
 
 /**
@@ -18,4 +19,12 @@ export function formatMoneyCompact(minor: Minor, currency: string, locale: strin
     minimumFractionDigits: whole ? 0 : undefined,
     maximumFractionDigits: whole ? 0 : undefined,
   }).format(major);
+}
+
+/** An ISO calendar date in the user's locale, e.g. "23 February 2027" (EM-55). No time zone shift. */
+export function formatDate(date: IsoDate, locale: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "UTC" }).format(
+    new Date(Date.UTC(y ?? 0, (m ?? 1) - 1, d ?? 1)),
+  );
 }
