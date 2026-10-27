@@ -92,8 +92,8 @@ test.describe("event creation (EM-01, EM-02)", () => {
     await expect(heading).toBeVisible();
     // EM-06: the persistent notice on the plan screen.
     await expect(page.getByText("This is a starting point. Edit anything.")).toBeVisible();
-    await expect(page.getByText("₹15,00,000 (INR)")).toBeVisible();
-    await expect(page.getByText("200 · Sangeet: 120")).toBeVisible();
+    await expect(page.getByText("allocated of ₹15,00,000 budget (INR)")).toBeVisible();
+    await expect(page.getByText("200 guests · Sangeet: 120")).toBeVisible();
     await expect(page.getByText("Udaipur, India")).toBeVisible();
 
     await page.reload();
@@ -163,7 +163,7 @@ test.describe("event creation (EM-01, EM-02)", () => {
 
     await page.getByRole("button", { name: "Create event" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Ananya & Rohan's wedding" })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("150 · Mehendi evening: 60")).toBeVisible();
+    await expect(page.getByText("150 guests · Mehendi evening: 60")).toBeVisible();
     await expectNoSeriousA11yViolations(page);
   });
 

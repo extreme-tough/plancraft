@@ -28,3 +28,13 @@ export function formatDate(date: IsoDate, locale: string): string {
     new Date(Date.UTC(y ?? 0, (m ?? 1) - 1, d ?? 1)),
   );
 }
+
+/**
+ * Rounded to whole units for summaries and line totals: ₹2,23,999.50 shows as ₹2,24,000. Stored
+ * values stay exact; editors and per-guest prices use formatMoneyCompact.
+ */
+export function formatMoneyWhole(minor: Minor, currency: string, locale: string): string {
+  return new Intl.NumberFormat(locale, { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(
+    Math.round(minorToMajor(minor, currency)),
+  );
+}

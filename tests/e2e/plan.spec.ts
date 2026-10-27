@@ -49,8 +49,8 @@ test.describe("plan generation (AI-01, EM-03)", () => {
     });
 
     // The plan replaces the generator: lines with labels and ranges, tasks, assumptions.
-    await expect(page.getByRole("heading", { level: 2, name: "Budget" })).toBeVisible(FIRST_LOAD);
-    await expect(page.getByRole("heading", { level: 3, name: "Venue hire" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: /Budget lines/ })).toBeVisible(FIRST_LOAD);
+    await expect(page.getByRole("heading", { level: 4, name: "Venue hire" })).toBeVisible();
     await expect(page.getByText("AI Estimate").first()).toBeVisible();
     await expect(page.getByText("₹2,40,000").first()).toBeVisible(); // 30 % of ₹8,00,000, split by code (EM-14)
     await expect(page.getByText(/allocated of ₹8,00,000/)).toBeVisible();
@@ -61,7 +61,7 @@ test.describe("plan generation (AI-01, EM-03)", () => {
     await expectNoSeriousA11yViolations(page);
 
     await page.reload();
-    await expect(page.getByRole("heading", { level: 3, name: "Venue hire" })).toBeVisible(FIRST_LOAD);
+    await expect(page.getByRole("heading", { level: 4, name: "Venue hire" })).toBeVisible(FIRST_LOAD);
     await expect(page.getByRole("button", { name: "Generate my plan" })).toHaveCount(0);
   });
 });
@@ -83,7 +83,7 @@ test.describe("plan generation fallbacks (spec §7.6, AI-12)", () => {
     // Retry reaches the real fixture-backed server once the outage is over.
     await page.unroute("**/api/ai/plan");
     await page.getByRole("button", { name: "Retry" }).click();
-    await expect(page.getByRole("heading", { level: 3, name: "Venue hire" })).toBeVisible(FIRST_LOAD);
+    await expect(page.getByRole("heading", { level: 4, name: "Venue hire" })).toBeVisible(FIRST_LOAD);
   });
 
   test("Start with an empty plan lists the categories and no amounts or tasks", async ({ page }) => {
@@ -96,7 +96,7 @@ test.describe("plan generation fallbacks (spec §7.6, AI-12)", () => {
     await expect(page.getByText("No lines yet: nothing has been estimated for you.", { exact: false })).toBeVisible();
     for (const category of ["Venue", "Catering", "Contingency"]) await expect(page.getByText(category, { exact: true })).toBeVisible();
     await expect(page.getByText("AI Estimate")).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "Tasks" })).toHaveCount(0);
+    await expect(page.getByText("No tasks yet.")).toBeVisible();
   });
 
   test("a rate limit disables Retry with a countdown", async ({ page }) => {

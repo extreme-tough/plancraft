@@ -82,7 +82,7 @@ export function AmountField({
         )}
       </div>
 
-      {known && (
+      {known && suggestions.length > 0 && (
         <div className="flex flex-col gap-2">
           <p id={`${aria.id}-picks`} className="text-muted-foreground text-sm">
             Quick picks
