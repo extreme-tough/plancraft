@@ -296,6 +296,14 @@ describe("demo examples (UX-10)", () => {
     expect(validateAnswers(inputs.answers).ok).toBe(true);
   });
 
+  it("holds inputs only: no lines, tasks, amounts or AI output (A27, AI-07)", () => {
+    for (const make of EXAMPLES) {
+      const example = make(TODAY);
+      expect(Object.keys(example).sort()).toEqual(["answers", "details", "key", "title"]);
+      expect(JSON.stringify(example)).not.toMatch(/"(lines|tasks|budgetLines|weight|estimateLow)"/);
+    }
+  });
+
   it("puts the wedding 120 days out and the birthday in USD", () => {
     expect(planningWindowDays(jaipurWedding(TODAY).details.eventDate, TODAY)).toBe(120);
     const birthday = validateEventDetails(austinBirthday(TODAY).details, TODAY);

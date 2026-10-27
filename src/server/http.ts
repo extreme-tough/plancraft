@@ -8,12 +8,20 @@ export type ErrorCode =
   | "UNAUTHENTICATED"
   | "RATE_LIMITED"
   | "DAILY_LIMIT_REACHED"
+  | "AI_UNAVAILABLE"
+  | "AI_TIMEOUT"
+  | "AI_INVALID_OUTPUT"
+  | "AI_BLOCKED"
   | "INTERNAL";
 
 const NO_STORE = { "Cache-Control": "no-store" } as const;
 
-export function jsonOk<T>(data: T, init: ResponseInit = {}): Response {
-  return Response.json({ ok: true, data }, { ...init, headers: { ...NO_STORE, ...init.headers } });
+export function jsonOk<T>(data: T, init: ResponseInit & { meta?: Record<string, unknown> } = {}): Response {
+  const { meta, ...rest } = init;
+  return Response.json(meta ? { ok: true, data, meta } : { ok: true, data }, {
+    ...rest,
+    headers: { ...NO_STORE, ...rest.headers },
+  });
 }
 
 export function jsonError(

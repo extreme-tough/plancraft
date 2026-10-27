@@ -6,7 +6,7 @@ These steps need the project owner's Google account. Run them once, before the f
 
 1. In the [Firebase console](https://console.firebase.google.com/), create a project (for example `plancraft`) and upgrade it to the **Blaze** plan (App Hosting and Vertex AI need billing).
 2. **Build → Authentication → Sign-in method:** enable **Google**. Leave **Anonymous** disabled; the shared demo account signs in with server-minted custom tokens (EM-58).
-3. **Build → Firestore Database:** create the database in **production mode** (region close to users, e.g. `asia-south1`).
+3. **Build → Firestore Database:** create the database in **production mode** (region close to users, e.g. `asia-south1`). Or from the CLI: `pnpm exec firebase firestore:databases:create "(default)" --location asia-south1 --project <PROJECT_ID>`. Create it **before** the first `firebase deploy`: a deploy with no database creates one itself, in a default US region, and a Firestore location can never be changed.
 4. **Build → Storage:** create the default bucket (used by the moodboard, EM-67).
 5. **Project settings → Your apps:** add a **Web app**. Copy its config into `NEXT_PUBLIC_FIREBASE_*` (see `.env.example`). This config is public by design.
 
@@ -31,7 +31,9 @@ gcloud projects add-iam-policy-binding <PROJECT_ID> --member "serviceAccount:fir
 gcloud iam service-accounts add-iam-policy-binding firebase-app-hosting-compute@<PROJECT_ID>.iam.gserviceaccount.com --member "serviceAccount:firebase-app-hosting-compute@<PROJECT_ID>.iam.gserviceaccount.com" --role roles/iam.serviceAccountTokenCreator --project <PROJECT_ID>
 ```
 
-- `roles/aiplatform.user`: Gemini on Vertex AI, with no API key (ENG-02).
+- `roles/aiplatform.user`: Gemini on Vertex AI, with no API key (ENG-02). The console may list it as **Agent Platform User**; check the role ID. Don't use the "Service Agent" roles.
+- Also enable the Vertex AI API (`aiplatform.googleapis.com`).
+- **Model and location:** `GEMINI_MODEL=gemini-3.8-flash` with `GOOGLE_CLOUD_LOCATION=global` (apphosting.yaml). On 27 Oct 2026 the current Gemini models answered only from the `global` location in this project, and `gemini-2.5-flash` no longer answered at all.
 - `roles/iam.serviceAccountTokenCreator` on itself: signing the shared demo account's custom tokens (EM-58).
 
 ## 4. Restrict the Firebase web API key

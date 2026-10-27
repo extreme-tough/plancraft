@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { planningWindowDays } from "@/domain/event-input";
 import { formatDate, formatMoneyCompact } from "@/domain/format";
@@ -14,6 +14,8 @@ import { useSignedIn } from "@/features/auth/auth-provider";
 import { countryName, EVENT_TYPE_TEXT, USE_CASE_TEXT } from "@/lib/display-names";
 import { useLocale } from "@/lib/locale";
 import { localToday } from "@/lib/today";
+import { PlanGenerator } from "./plan-generator";
+import { EmptyPlan, PlanOverview } from "./plan-overview";
 
 type Load =
   | { state: "loading" }
@@ -137,16 +139,14 @@ function EventSummary({ plan, today, locale }: { plan: EventPlan; today: string;
         </CardHeader>
       </Card>
 
-      {plan.lines.length === 0 && plan.tasks.length === 0 && (
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle render={<h2 />}>No plan yet</CardTitle>
-            <CardDescription>
-              Your budget lines and task timeline will be built from the details and answers you gave.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+      <PlanSection plan={plan} today={today} locale={locale} />
     </>
   );
+}
+
+function PlanSection({ plan, today, locale }: { plan: EventPlan; today: string; locale: string }): React.ReactElement {
+  const [startedEmpty, setStartedEmpty] = useState(false);
+  if (plan.lines.length > 0 || plan.tasks.length > 0) return <PlanOverview plan={plan} today={today} locale={locale} />;
+  if (startedEmpty) return <EmptyPlan plan={plan} locale={locale} />;
+  return <PlanGenerator plan={plan} onStartEmpty={() => setStartedEmpty(true)} />;
 }

@@ -1,0 +1,149 @@
+{
+  "summary": "A balanced starting plan: the venue and catering take the largest shares, with the rest spread across decoration, photography and entertainment.",
+  "budgetLines": [
+    {
+      "key": "L1",
+      "category": "venue",
+      "name": "Venue hire",
+      "part": null,
+      "pricing": "flat",
+      "weight": 30,
+      "estimateLow": 150000,
+      "estimateHigh": 300000,
+      "assumptions": ["A mid-range banquet hall or garden for one evening."],
+      "vendorNeeds": ["Step-free entrance and an accessible restroom", "Backup power"],
+      "vendorQuestions": ["Is decoration included or allowed from outside vendors?"]
+    },
+    {
+      "key": "L2",
+      "category": "catering",
+      "name": "Catering",
+      "part": null,
+      "pricing": "per_guest",
+      "weight": 35,
+      "estimateLow": 1200,
+      "estimateHigh": 2500,
+      "assumptions": ["A buffet dinner with two starters, three mains and one dessert."],
+      "vendorNeeds": ["Vegetarian options clearly labelled"],
+      "vendorQuestions": ["What is the per-plate price for children?", "Is service staff included?"]
+    },
+    {
+      "key": "L3",
+      "category": "decoration",
+      "name": "Decoration and flowers",
+      "part": null,
+      "pricing": "flat",
+      "weight": 10,
+      "estimateLow": 40000,
+      "estimateHigh": 90000,
+      "assumptions": ["Fresh flowers at the entrance and on each table."],
+      "vendorNeeds": ["Set-up and clean-up included"],
+      "vendorQuestions": []
+    },
+    {
+      "key": "L4",
+      "category": "photography",
+      "name": "Photography",
+      "part": null,
+      "pricing": "flat",
+      "weight": 8,
+      "estimateLow": 35000,
+      "estimateHigh": 80000,
+      "assumptions": ["One photographer for the main event, edited photos only."],
+      "vendorNeeds": ["Delivery of edited photos within four weeks"],
+      "vendorQuestions": ["How many edited photos are included?"]
+    },
+    {
+      "key": "L5",
+      "category": "entertainment",
+      "name": "Live band",
+      "part": null,
+      "pricing": "flat",
+      "weight": 6,
+      "estimateLow": 25000,
+      "estimateHigh": 60000,
+      "assumptions": ["A three-hour set with their own sound system."],
+      "vendorNeeds": [],
+      "vendorQuestions": []
+    },
+    {
+      "key": "L6",
+      "category": "attire",
+      "name": "Outfits",
+      "part": null,
+      "pricing": "flat",
+      "weight": 4,
+      "estimateLow": 15000,
+      "estimateHigh": 40000,
+      "assumptions": ["Outfits for the hosts only."],
+      "vendorNeeds": [],
+      "vendorQuestions": []
+    },
+    {
+      "key": "L7",
+      "category": "invitations",
+      "name": "Invitations",
+      "part": null,
+      "pricing": "flat",
+      "weight": 2,
+      "estimateLow": 3000,
+      "estimateHigh": 10000,
+      "assumptions": ["Digital invitations with a few printed cards for elders."],
+      "vendorNeeds": [],
+      "vendorQuestions": []
+    },
+    {
+      "key": "L8",
+      "category": "transport",
+      "name": "Guest transport",
+      "part": null,
+      "pricing": "flat",
+      "weight": 2,
+      "estimateLow": 5000,
+      "estimateHigh": 15000,
+      "assumptions": ["One shuttle for older guests from the nearest station."],
+      "vendorNeeds": [],
+      "vendorQuestions": []
+    },
+    {
+      "key": "L9",
+      "category": "permits",
+      "name": "Permits and licences",
+      "part": null,
+      "pricing": "flat",
+      "weight": 1,
+      "estimateLow": 1000,
+      "estimateHigh": 5000,
+      "assumptions": ["A music licence for the evening."],
+      "vendorNeeds": [],
+      "vendorQuestions": []
+    },
+    {
+      "key": "L10",
+      "category": "other",
+      "name": "Favours and small items",
+      "part": null,
+      "pricing": "flat",
+      "weight": 2,
+      "estimateLow": 5000,
+      "estimateHigh": 15000,
+      "assumptions": ["Small return gifts for each family."],
+      "vendorNeeds": [],
+      "vendorQuestions": []
+    }
+  ],
+  "tasks": [
+    { "key": "T1", "title": "Book venue", "line": "L1", "priority": "high", "leadTimeDays": 90, "durationDays": 7, "dependsOn": [] },
+    { "key": "T2", "title": "Book caterer", "line": "L2", "priority": "high", "leadTimeDays": 60, "durationDays": 10, "dependsOn": ["T1"] },
+    { "key": "T3", "title": "Menu tasting", "line": "L2", "priority": "medium", "leadTimeDays": 30, "durationDays": 3, "dependsOn": ["T2"] },
+    { "key": "T4", "title": "Send invitations", "line": "L7", "priority": "medium", "leadTimeDays": 45, "durationDays": 5, "dependsOn": ["T1"] },
+    { "key": "T5", "title": "Book photographer", "line": "L4", "priority": "medium", "leadTimeDays": 60, "durationDays": 7, "dependsOn": [] },
+    { "key": "T6", "title": "Confirm accessibility arrangements with the venue", "line": "L1", "priority": "high", "leadTimeDays": 30, "durationDays": 2, "dependsOn": ["T1"] },
+    { "key": "T7", "title": "Finalise guest list", "line": null, "priority": "high", "leadTimeDays": 50, "durationDays": 7, "dependsOn": [] }
+  ],
+  "assumptions": [
+    "No preferred venue was named, so a mid-range hall is assumed.",
+    "Guests are mostly local; only a shuttle for older guests is planned."
+  ],
+  "openQuestions": ["Do you already have a venue in mind?", "Should children have their own menu?"]
+}

@@ -12,9 +12,9 @@ const ServerEnvSchema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     APP_ENV: z.enum(["development", "test", "production"]).optional(),
     AI_PROVIDER: z.enum(["vertex", "fixture"]).default("vertex"),
-    GEMINI_MODEL: z.string().min(1).default("gemini-2.5-flash"),
+    GEMINI_MODEL: z.string().min(1).default("gemini-3.8-flash"),
     GOOGLE_CLOUD_PROJECT: z.string().min(1).optional(),
-    GOOGLE_CLOUD_LOCATION: z.string().min(1).default("us-central1"),
+    GOOGLE_CLOUD_LOCATION: z.string().min(1).default("global"),
     AI_DAILY_CAP: z.coerce.number().int().positive().default(2000),
     /** Firebase project for the Admin SDK; falls back to the public project id. */
     NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().min(1).optional(),

@@ -17,13 +17,13 @@ env:
     value: vertex
     availability: [RUNTIME]
   - variable: GEMINI_MODEL
-    value: gemini-2.5-flash
+    value: gemini-3.8-flash
     availability: [RUNTIME]
   - variable: GOOGLE_CLOUD_PROJECT
     value: plant-care-copilot
     availability: [RUNTIME]
   - variable: GOOGLE_CLOUD_LOCATION
-    value: us-central1
+    value: global
     availability: [RUNTIME]
   - variable: AI_DAILY_CAP
     value: "2000"

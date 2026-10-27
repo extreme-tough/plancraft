@@ -24,7 +24,7 @@ describe("parseServerEnv", () => {
   it("treats blank values as unset, so .env.example works as copied", () => {
     const env = parseServerEnv({ GOOGLE_CLOUD_PROJECT: "", GEMINI_MODEL: "  ", AI_DAILY_CAP: "" });
     expect(env.GOOGLE_CLOUD_PROJECT).toBeUndefined();
-    expect(env.GEMINI_MODEL).toBe("gemini-2.5-flash");
+    expect(env.GEMINI_MODEL).toBe("gemini-3.8-flash");
     expect(env.AI_DAILY_CAP).toBe(2000);
   });
 
