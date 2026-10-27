@@ -1,7 +1,8 @@
 "use client";
 
-import { CircleAlert, CircleCheck, CloudOff, HelpCircle, Info, Lightbulb, Loader, TriangleAlert, X, Zap } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { CircleAlert, CircleCheck, CloudOff, GitCompareArrows, HelpCircle, Info, Lightbulb, Loader, MessageSquareText, SlidersHorizontal, TriangleAlert, X, Zap } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { summarizeBudget } from "@/domain/budget";
@@ -19,6 +20,8 @@ import {
 import { formatDate, formatMoneyWhole } from "@/domain/format";
 import { computeSchedule, nextUp, progressPercent } from "@/domain/schedule";
 import type { EventPlan, Task } from "@/domain/schemas";
+import { useSignedIn } from "@/features/auth/auth-provider";
+import { AskSheet, ConstraintSheet } from "@/features/revision/change-sheets";
 import { BudgetLines } from "./budget-lines";
 import { HeroCard } from "./hero-card";
 import { LineSheet, type LineSave } from "./line-sheet";
@@ -179,7 +182,48 @@ function AssumptionsPanel({ plan }: { plan: EventPlan }): React.ReactElement | n
   );
 }
 
-type Sheet = { kind: "line"; id: string | null } | { kind: "task"; id: string | null } | null;
+/**
+ * Revisions (EM-27, EM-08, UX-01): change budget, date or guests, or ask in your own words. A pending
+ * revision is linked here until it is applied or discarded (one at a time, §8.6).
+ */
+function ChangeBar({ plan, onConstraints, onAsk }: { plan: EventPlan; onConstraints: () => void; onAsk: () => void }): React.ReactElement {
+  const { repository } = useSignedIn();
+  const [pending, setPending] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    repository
+      .listProposals(plan.id)
+      .then((proposals) => active && setPending(proposals.find((p) => p.kind === "revision")?.id ?? null))
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [repository, plan.id, plan.version]);
+
+  return (
+    <section aria-label="Change the plan" className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm">Plans change. See the effect on every line and task before anything is saved.</p>
+      <div className="flex flex-wrap gap-2">
+        {pending && (
+          <Button variant="secondary" render={<Link href={`/events/${plan.id}/revise?proposal=${pending}`} />}>
+            <GitCompareArrows aria-hidden="true" />
+            Review the pending revision
+          </Button>
+        )}
+        <Button variant="outline" onClick={onConstraints}>
+          <SlidersHorizontal aria-hidden="true" />
+          Change budget, date or guests
+        </Button>
+        <Button variant="outline" onClick={onAsk}>
+          <MessageSquareText aria-hidden="true" />
+          Ask for a change
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+type Sheet = { kind: "line"; id: string | null } | { kind: "task"; id: string | null } | { kind: "constraints" } | { kind: "ask" } | null;
 
 /**
  * The Plan Dashboard (Figma 0:874 / 0:503; EM-06, EM-13, EM-16, EM-20, EM-22–EM-26, UX-09).
@@ -253,6 +297,8 @@ export function Dashboard({ stored, today, locale }: { stored: EventPlan; today:
         )}
       </div>
 
+      <ChangeBar plan={plan} onConstraints={() => setSheet({ kind: "constraints" })} onAsk={() => setSheet({ kind: "ask" })} />
+
       {plan.tasks.length > 0 && <NextUp editor={editor} today={today} locale={locale} />}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
@@ -284,6 +330,8 @@ export function Dashboard({ stored, today, locale }: { stored: EventPlan; today:
           onDelete={() => (editingLine ? editor.edit(`deleting "${editingLine.name}"`, (p) => removeLine(p, editingLine.id)) : Promise.resolve(false))}
         />
       )}
+      {sheet?.kind === "constraints" && <ConstraintSheet plan={plan} today={today} locale={locale} open onOpenChange={close} />}
+      {sheet?.kind === "ask" && <AskSheet plan={plan} today={today} open onOpenChange={close} />}
       {sheet?.kind === "task" && (
         <TaskSheet
           key={sheet.id ?? "new"}

@@ -12,15 +12,25 @@ import { cleanStrings } from "./text";
  * Nothing that fails validation is ever returned (AI-11). Logs carry rule IDs only, never text.
  */
 
-export interface AiCallSpec<Req, Res> {
+/** A call's model request, built from what the browser sent (or a refusal before the model is called). */
+export type Prepared<Req> = { ok: true; request: Req } | { ok: false; status: number; code: ErrorCode; message: string };
+
+/**
+ * One AI call. `Input` is what the browser sends; `Req` is what the prompt is built from. They are
+ * the same for the plan call; the revision call's `prepare` reads the stored plan to build `Req`.
+ */
+export interface AiCallSpec<Req, Res, Input = Req> {
   name: AiCallName;
-  requestSchema: z.ZodType<Req>;
+  requestSchema: z.ZodType<Input>;
   /** Request rules beyond the schema; a message means 400. */
-  requestProblem(request: Req, now: Date): string | null;
+  requestProblem(input: Input, now: Date): string | null;
+  prepare?(input: Input, caller: Caller, now: Date): Promise<Prepared<Req>>;
   responseSchema: z.ZodType<Res>;
   providerSchema: Record<string, unknown>;
-  /** Failed rule IDs; empty means valid. */
+  /** Failed rule IDs that make the whole response unusable; empty means valid. */
   rules(response: Res, request: Req): string[];
+  /** Drops the parts a rule says to drop (e.g. invalid revision options, R1–R6), after the rules pass. */
+  normalize?(response: Res, request: Req): Res;
   /** Plain-language meaning of each rule, for the repair prompt. */
   ruleText: Readonly<Record<string, string>>;
   system: string;
@@ -37,7 +47,7 @@ export const SCHEMA_RULE = "SCHEMA";
 export type Validation<Res> = { ok: true; data: Res } | { ok: false; failed: string[] };
 
 /** Parse → clean → schema → rules. Pure, so contract tests can feed it any model text. */
-export function validateOutput<Req, Res>(spec: AiCallSpec<Req, Res>, text: string, request: Req): Validation<Res> {
+export function validateOutput<Req, Res, Input>(spec: AiCallSpec<Req, Res, Input>, text: string, request: Req): Validation<Res> {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -47,7 +57,8 @@ export function validateOutput<Req, Res>(spec: AiCallSpec<Req, Res>, text: strin
   const result = spec.responseSchema.safeParse(cleanStrings(parsed));
   if (!result.success) return { ok: false, failed: [SCHEMA_RULE] };
   const failed = spec.rules(result.data, request);
-  return failed.length === 0 ? { ok: true, data: result.data } : { ok: false, failed };
+  if (failed.length > 0) return { ok: false, failed };
+  return { ok: true, data: spec.normalize ? spec.normalize(result.data, request) : result.data };
 }
 
 export type Generation<Res> =
@@ -67,8 +78,8 @@ function repairPrompt(user: string, failed: readonly string[], ruleText: Readonl
  * At most two model calls per user action (ENG-11): one, plus one repair when the output is invalid.
  * Timeouts, outages and safety blocks are not retried automatically (spec §7.2.8).
  */
-export async function generateValidated<Req, Res>(
-  spec: AiCallSpec<Req, Res>,
+export async function generateValidated<Req, Res, Input>(
+  spec: AiCallSpec<Req, Res, Input>,
   request: Req,
   provider: AiProvider,
 ): Promise<Generation<Res>> {
@@ -100,6 +111,8 @@ export interface Caller {
 
 export interface AiLimits {
   dailyCap: number;
+  demoIpPerMinute: number;
+  demoIpPerDay: number;
 }
 
 /**
@@ -109,8 +122,8 @@ export interface AiLimits {
 export function aiLimitRules(caller: Caller, ip: string, limits: AiLimits): LimitRule[] {
   const own = caller.isDemo
     ? [
-        { key: `ai:demo-ip:${ip}`, limit: 10, windowSeconds: 60 },
-        { key: `ai:demo-ip:${ip}`, limit: 50, windowSeconds: DAY_SECONDS },
+        { key: `ai:demo-ip:${ip}`, limit: limits.demoIpPerMinute, windowSeconds: 60 },
+        { key: `ai:demo-ip:${ip}`, limit: limits.demoIpPerDay, windowSeconds: DAY_SECONDS },
         { key: "ai:demo-total", limit: 1500, windowSeconds: DAY_SECONDS },
       ]
     : [
@@ -147,9 +160,9 @@ const FAILURES: Record<ModelFailure | "AI_INVALID_OUTPUT", { status: number; mes
   AI_BLOCKED: { status: 502, message: "The AI declined to answer this request.", retryable: false },
 };
 
-export async function runAiCall<Req, Res>(
+export async function runAiCall<Req, Res, Input>(
   request: Request,
-  spec: AiCallSpec<Req, Res>,
+  spec: AiCallSpec<Req, Res, Input>,
   deps: PipelineDeps,
 ): Promise<Response> {
   const started = Date.now();
@@ -189,9 +202,13 @@ export async function runAiCall<Req, Res>(
   if (!parsed.success) return fail(400, "INVALID_REQUEST", "The request doesn't match what this call expects.");
   const problem = spec.requestProblem(parsed.data, now);
   if (problem) return fail(400, "INVALID_REQUEST", problem);
+  const prepared: Prepared<Req> = spec.prepare
+    ? await spec.prepare(parsed.data, caller, now)
+    : { ok: true, request: parsed.data as unknown as Req };
+  if (!prepared.ok) return fail(prepared.status, prepared.code, prepared.message);
 
   // 4–7. Prompt, model, validation and at most one repair.
-  const result = await generateValidated(spec, parsed.data, deps.provider);
+  const result = await generateValidated(spec, prepared.request, deps.provider);
   if (!result.ok) {
     const failure = FAILURES[result.code];
     log(result.code, { attempts: result.attempts, rules: result.failed, ...(result.reason ? { reason: result.reason } : {}) });

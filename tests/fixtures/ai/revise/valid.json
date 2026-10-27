@@ -1,0 +1,49 @@
+{
+  "interpretation": "Keep the event within the new budget and dates without touching what is already confirmed.",
+  "constraintChanges": [],
+  "options": [
+    {
+      "key": "O1",
+      "title": "Drop the live band and the favours",
+      "rationale": "A playlist through the venue's sound system keeps the evening lively, and favours are the easiest extra to let go.",
+      "ops": [
+        { "op": "remove_line", "target": "L5", "value": null, "newLine": null, "newTask": null },
+        { "op": "remove_line", "target": "L10", "value": null, "newLine": null, "newTask": null }
+      ],
+      "assumptions": ["The venue has a sound system you can use."]
+    },
+    {
+      "key": "O2",
+      "title": "Simpler decoration and no outfit budget",
+      "rationale": "Let the venue's own setting carry the look, and wear outfits you already have.",
+      "ops": [
+        { "op": "remove_line", "target": "L3", "value": null, "newLine": null, "newTask": null },
+        { "op": "remove_line", "target": "L6", "value": null, "newLine": null, "newTask": null },
+        {
+          "op": "add_task",
+          "target": null,
+          "value": null,
+          "newLine": null,
+          "newTask": {
+            "key": "N1",
+            "title": "Ask the venue what decoration is included",
+            "line": "L1",
+            "priority": "medium",
+            "leadTimeDays": 45,
+            "durationDays": 2,
+            "dependsOn": ["T1"]
+          }
+        }
+      ],
+      "assumptions": ["The venue includes basic table decoration."]
+    },
+    {
+      "key": "O3",
+      "title": "A smaller venue",
+      "rationale": "A hall with a lower hire fee frees the most money in one step.",
+      "ops": [{ "op": "set_amount", "target": "L1", "value": 100000, "newLine": null, "newTask": null }],
+      "assumptions": ["A smaller hall can still seat everyone."]
+    }
+  ],
+  "assumptions": ["Confirmed costs stay exactly as agreed."]
+}

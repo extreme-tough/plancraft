@@ -13,6 +13,8 @@ const testEnv = {
   NEXT_TELEMETRY_DISABLED: "1",
   // Every test signs in from the same local IP; the production limit is 20 a minute.
   DEMO_SESSION_LIMIT_PER_MINUTE: "1000",
+  AI_DEMO_IP_LIMIT_PER_MINUTE: "1000",
+  AI_DEMO_IP_LIMIT_PER_DAY: "100000",
 };
 
 export default defineConfig({

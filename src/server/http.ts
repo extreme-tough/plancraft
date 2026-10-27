@@ -8,6 +8,8 @@ export type ErrorCode =
   | "UNAUTHENTICATED"
   | "RATE_LIMITED"
   | "DAILY_LIMIT_REACHED"
+  /** The stored plan changed or is invalid (EM-56); the browser reloads it. */
+  | "CONFLICT"
   | "AI_UNAVAILABLE"
   | "AI_TIMEOUT"
   | "AI_INVALID_OUTPUT"

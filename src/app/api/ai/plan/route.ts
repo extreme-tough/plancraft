@@ -23,7 +23,7 @@ export async function POST(request: Request): Promise<Response> {
       consume: (rules, now) => consume(db, rules, now),
       provider: aiProvider(env),
       clientIp: clientIp(request.headers, env.TRUSTED_PROXY_HOPS) ?? "unknown",
-      limits: { dailyCap: env.AI_DAILY_CAP },
+      limits: { dailyCap: env.AI_DAILY_CAP, demoIpPerMinute: env.AI_DEMO_IP_LIMIT_PER_MINUTE, demoIpPerDay: env.AI_DEMO_IP_LIMIT_PER_DAY },
       now: () => new Date(),
       // Rule IDs and outcomes only: never user text or AI text (spec §7.2.11).
       log: (entry) => console.info(JSON.stringify({ event: "ai_call", ...entry })),

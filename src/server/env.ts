@@ -29,6 +29,9 @@ const ServerEnvSchema = z
     TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(2),
     /** Demo sign-ins allowed per IP per minute (EM-58). E2E raises it: every test shares one IP. */
     DEMO_SESSION_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(20),
+    /** Shared-demo AI calls per IP (ENG-08: 10 a minute, 50 a day). E2E raises them: one IP for every test. */
+    AI_DEMO_IP_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(10),
+    AI_DEMO_IP_LIMIT_PER_DAY: z.coerce.number().int().positive().default(50),
     /** Service account Cloud Scheduler signs its OIDC token with (EM-63, slice S8). */
     DEMO_RESET_INVOKER: z.string().min(1).optional(),
   })

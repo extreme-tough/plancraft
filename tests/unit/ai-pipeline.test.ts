@@ -29,7 +29,7 @@ function deps(overrides: Partial<PipelineDeps> = {}): PipelineDeps & { logs: Rec
     consume: async (): Promise<LimitResult> => ({ ok: true }),
     provider: new ScriptedProvider([FIXTURE]),
     clientIp: "203.0.113.9",
-    limits: { dailyCap: 2000 },
+    limits: { dailyCap: 2000, demoIpPerMinute: 10, demoIpPerDay: 50 },
     now: () => NOW,
     log: (entry) => logs.push(entry),
     logs,
@@ -146,7 +146,7 @@ describe("aiLimitRules (ENG-08)", () => {
   const demo: Caller = { uid: DEMO_UID, isDemo: true };
 
   it("counts Google users per user ID: 10 a minute, 100 a day, plus the global cap", () => {
-    expect(aiLimitRules(google, "1.2.3.4", { dailyCap: 2000 })).toEqual([
+    expect(aiLimitRules(google, "1.2.3.4", { dailyCap: 2000, demoIpPerMinute: 10, demoIpPerDay: 50 })).toEqual([
       { key: "ai:user:u1", limit: 10, windowSeconds: 60 },
       { key: "ai:user:u1", limit: 100, windowSeconds: DAY_SECONDS },
       { key: "ai:all", limit: 2000, windowSeconds: DAY_SECONDS },
@@ -154,7 +154,7 @@ describe("aiLimitRules (ENG-08)", () => {
   });
 
   it("counts the shared demo per IP (10 a minute, 50 a day) and 1,500 a day in total", () => {
-    expect(aiLimitRules(demo, "1.2.3.4", { dailyCap: 7 })).toEqual([
+    expect(aiLimitRules(demo, "1.2.3.4", { dailyCap: 7, demoIpPerMinute: 10, demoIpPerDay: 50 })).toEqual([
       { key: "ai:demo-ip:1.2.3.4", limit: 10, windowSeconds: 60 },
       { key: "ai:demo-ip:1.2.3.4", limit: 50, windowSeconds: DAY_SECONDS },
       { key: "ai:demo-total", limit: 1500, windowSeconds: DAY_SECONDS },
