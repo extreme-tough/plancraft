@@ -5,8 +5,12 @@ import { z } from "zod";
  * Gemini accepts a subset, so this keeps only structural keywords: flat objects, nullable fields as
  * `type: [x, "null"]`, no `$ref`, `oneOf` or `anyOf` (spec §7.2.3). Lengths, patterns and ranges the
  * provider might ignore are still checked on the server with the full Zod schema.
+ *
+ * No `maxItems`: on 27 Oct 2026 Vertex AI answered 400 INVALID_ARGUMENT to the plan schema with upper
+ * bounds on its arrays (25 lines, 40 tasks), and accepted it without them. The prompt states the
+ * counts, and the Zod schema still enforces every maximum.
  */
-const KEEP = new Set(["type", "properties", "required", "items", "enum", "minItems", "maxItems", "minimum", "maximum", "description"]);
+const KEEP = new Set(["type", "properties", "required", "items", "enum", "minItems", "minimum", "maximum", "description"]);
 
 type Json = Record<string, unknown>;
 

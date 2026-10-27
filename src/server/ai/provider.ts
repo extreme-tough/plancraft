@@ -18,7 +18,10 @@ export interface ModelRequest {
 
 export type ModelFailure = "AI_UNAVAILABLE" | "AI_TIMEOUT" | "AI_BLOCKED";
 
-export type ModelResult = { kind: "ok"; text: string } | { kind: "error"; code: ModelFailure };
+export type ModelResult =
+  | { kind: "ok"; text: string }
+  /** `reason` is for logs only: an HTTP status or error type, never request or response text. */
+  | { kind: "error"; code: ModelFailure; reason?: string };
 
 export interface AiProvider {
   /** Reported in the response envelope's `meta.model`. */

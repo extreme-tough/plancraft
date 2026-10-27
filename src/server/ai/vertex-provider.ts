@@ -1,5 +1,5 @@
 import "server-only";
-import { FinishReason, GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { ApiError, FinishReason, GoogleGenAI, ThinkingLevel } from "@google/genai";
 import type { AiProvider, ModelRequest, ModelResult } from "./provider";
 
 /**
@@ -41,8 +41,11 @@ export class VertexProvider implements AiProvider {
       }
       // Truncated or empty text still goes to validation: it fails there and gets one repair attempt.
       return { kind: "ok", text: response.text ?? "" };
-    } catch {
-      return { kind: "error", code: controller.signal.aborted ? "AI_TIMEOUT" : "AI_UNAVAILABLE" };
+    } catch (error) {
+      if (controller.signal.aborted) return { kind: "error", code: "AI_TIMEOUT" };
+      // e.g. "http_400" for a rejected request, so logs tell a bad schema from an outage.
+      const status = error instanceof ApiError ? error.status : undefined;
+      return { kind: "error", code: "AI_UNAVAILABLE", reason: status ? `http_${status}` : error instanceof Error ? error.name : "unknown" };
     } finally {
       clearTimeout(timer);
     }

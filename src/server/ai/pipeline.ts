@@ -52,7 +52,7 @@ export function validateOutput<Req, Res>(spec: AiCallSpec<Req, Res>, text: strin
 
 export type Generation<Res> =
   | { ok: true; data: Res; attempts: number }
-  | { ok: false; code: ModelFailure | "AI_INVALID_OUTPUT"; attempts: number; failed: string[] };
+  | { ok: false; code: ModelFailure | "AI_INVALID_OUTPUT"; attempts: number; failed: string[]; reason?: string };
 
 function repairPrompt(user: string, failed: readonly string[], ruleText: Readonly<Record<string, string>>): string {
   const reasons = failed.map((id) => {
@@ -84,7 +84,7 @@ export async function generateValidated<Req, Res>(
       maxOutputTokens: spec.maxOutputTokens,
       timeoutMs: spec.timeoutMs,
     });
-    if (result.kind === "error") return { ok: false, code: result.code, attempts: attempt, failed };
+    if (result.kind === "error") return { ok: false, code: result.code, attempts: attempt, failed, reason: result.reason };
     const validation = validateOutput(spec, result.text, request);
     if (validation.ok) return { ok: true, data: validation.data, attempts: attempt };
     failed = validation.failed;
@@ -194,7 +194,7 @@ export async function runAiCall<Req, Res>(
   const result = await generateValidated(spec, parsed.data, deps.provider);
   if (!result.ok) {
     const failure = FAILURES[result.code];
-    log(result.code, { attempts: result.attempts, rules: result.failed });
+    log(result.code, { attempts: result.attempts, rules: result.failed, ...(result.reason ? { reason: result.reason } : {}) });
     return jsonError(failure.status, result.code, failure.message, { retryable: failure.retryable });
   }
   log("ok", { attempts: result.attempts, isDemo: caller.isDemo });

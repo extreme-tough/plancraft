@@ -126,6 +126,12 @@ describe("runAiCall: model failures map to the envelope (spec §7.2.9)", () => {
     expect((await envelope(response)).error).toMatchObject({ code, retryable });
   });
 
+  it("logs the provider's error type (an HTTP status), never its message", async () => {
+    const d = deps({ provider: new ScriptedProvider([{ kind: "error", code: "AI_UNAVAILABLE", reason: "http_400" }]) });
+    await runAiCall(post(), PLAN_CALL, d);
+    expect(d.logs).toEqual([expect.objectContaining({ outcome: "AI_UNAVAILABLE", reason: "http_400", attempts: 1 })]);
+  });
+
   it("invalid twice → 502 AI_INVALID_OUTPUT, and the failed rules are logged", async () => {
     const d = deps({ provider: new ScriptedProvider(["{}", "{}"]) });
     const response = await runAiCall(post(), PLAN_CALL, d);

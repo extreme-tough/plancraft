@@ -151,6 +151,11 @@ describe("the provider schema (Gemini subset, spec §7.2.3)", () => {
     expect(text).not.toMatch(/"\$ref"|"oneOf"|"anyOf"|"\$schema"|"\$defs"/);
   });
 
+  it("has no maxItems, which Vertex AI rejects on the plan schema (INVALID_ARGUMENT)", () => {
+    expect(text).not.toContain("maxItems");
+    expect(text).toContain("minItems");
+  });
+
   it("expresses nullable fields as a type list and keeps required fields and enums", () => {
     const properties = schema.properties as Record<string, { items: { properties: Record<string, unknown>; required: string[] } }>;
     const lineSchema = properties.budgetLines?.items ?? { properties: {}, required: [] };
