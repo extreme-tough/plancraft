@@ -214,3 +214,28 @@ export function unpickableDependencies(plan: EventPlan, taskId: string | null): 
   blocked.add(taskId);
   return blocked;
 }
+
+export interface PaymentInput {
+  paid: Minor;
+  balanceDue: string | null;
+  note: string;
+}
+
+/**
+ * EM-64: what has been paid on a line and when the balance is due. Payment isn't price, so a
+ * confirmed line can record one too. An empty payment (nothing paid, no date, no note) clears it.
+ */
+export function setPayment(plan: EventPlan, lineId: string, input: PaymentInput): EventPlan {
+  const current = line(plan, lineId);
+  if (input.paid < 0) throw new DomainError("invalid_value", "The amount paid can't be negative.");
+  if (input.paid > current.amount) throw new DomainError("invalid_value", `The amount paid can't be more than the line's amount.`);
+  const note = input.note.trim();
+  const payment = input.paid === 0 && input.balanceDue === null && note === "" ? null : { paid: input.paid, balanceDue: input.balanceDue, note };
+  return finish({ ...plan, lines: plan.lines.map((l) => (l.id === lineId ? { ...l, payment } : l)) });
+}
+
+/** EM-66: plain-text notes for everyone working on the event. */
+export function setTeamNotes(plan: EventPlan, text: string): EventPlan {
+  if (text.length > 2000) throw new DomainError("invalid_value", "Notes can be up to 2,000 characters.");
+  return finish({ ...plan, teamNotes: text });
+}

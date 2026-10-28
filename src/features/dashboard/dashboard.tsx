@@ -12,6 +12,7 @@ import {
   confirmLine,
   removeLine,
   removeTask,
+  setPayment,
   setTaskStatus,
   unconfirmLine,
   updateLine,
@@ -25,8 +26,11 @@ import { AskSheet, ConstraintSheet } from "@/features/revision/change-sheets";
 import { BudgetLines } from "./budget-lines";
 import { HeroCard } from "./hero-card";
 import { LineSheet, type LineSave } from "./line-sheet";
+import { Moodboard } from "./moodboard";
+import { Notifications } from "./notifications";
 import { TaskSheet, type TaskSave } from "./task-sheet";
 import { needsAttention, TaskTimeline } from "./task-timeline";
+import { TeamNotes } from "./team-notes";
 import { usePlanEditor, type PlanEditor, type SaveState } from "./use-plan-editor";
 
 function useOnline(): boolean {
@@ -245,9 +249,12 @@ export function Dashboard({ stored, today, locale }: { stored: EventPlan; today:
   const editingLine = sheet?.kind === "line" && sheet.id ? (plan.lines.find((l) => l.id === sheet.id) ?? null) : null;
   const editingTask = sheet?.kind === "task" && sheet.id ? (plan.tasks.find((t) => t.id === sheet.id) ?? null) : null;
 
-  const saveLine = ({ input, confirmed }: LineSave): Promise<boolean> => {
+  const saveLine = ({ input, confirmed, payment }: LineSave): Promise<boolean> => {
     const name = input.name.trim() || "the new line";
-    if (!editingLine) return editor.edit(`adding "${name}"`, (p) => addLine(p, crypto.randomUUID(), input));
+    if (!editingLine) {
+      const id = crypto.randomUUID();
+      return editor.edit(`adding "${name}"`, (p) => setPayment(addLine(p, id, input), id, payment));
+    }
     const id = editingLine.id;
     return editor.edit(`your change to "${editingLine.name}"`, (p) => {
       let next = p;
@@ -255,7 +262,7 @@ export function Dashboard({ stored, today, locale }: { stored: EventPlan; today:
       if (confirmed === false && editingLine.label === "confirmed") next = unconfirmLine(next, id);
       next = updateLine(next, id, input);
       if (confirmed === true && editingLine.label !== "confirmed") next = confirmLine(next, id);
-      return next;
+      return setPayment(next, id, payment);
     });
   };
 
@@ -279,7 +286,12 @@ export function Dashboard({ stored, today, locale }: { stored: EventPlan; today:
   return (
     <div className="flex flex-col gap-6">
       <AtRiskBanner plan={plan} today={today} locale={locale} />
-      <HeroCard plan={plan} today={today} locale={locale} status={<SaveStatus save={editor.save} />} />
+      <HeroCard plan={plan} today={today} locale={locale} status={
+          <div className="flex flex-wrap items-center gap-2">
+            <Notifications editor={editor} today={today} locale={locale} />
+            <SaveStatus save={editor.save} />
+          </div>
+        } />
 
       {/* EM-06: always shown on the plan screen. */}
       <Alert variant="info">
@@ -319,6 +331,8 @@ export function Dashboard({ stored, today, locale }: { stored: EventPlan; today:
             onAdd={() => setSheet({ kind: "task", id: null })}
           />
           <AssumptionsPanel plan={plan} />
+          <TeamNotes editor={editor} />
+          <Moodboard eventId={plan.id} />
         </div>
       </div>
 

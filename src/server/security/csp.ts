@@ -25,7 +25,7 @@ export interface CspOptions {
   emulators?: boolean;
 }
 
-export const EMULATOR_ORIGINS: readonly string[] = ["http://127.0.0.1:9099", "http://127.0.0.1:8080"];
+export const EMULATOR_ORIGINS: readonly string[] = ["http://127.0.0.1:9099", "http://127.0.0.1:8080", "http://127.0.0.1:9199"];
 
 export function buildCsp({ nonce, isDev, authDomain, emulators = false }: CspOptions): string {
   const scriptSrc = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
@@ -39,11 +39,15 @@ export function buildCsp({ nonce, isDev, authDomain, emulators = false }: CspOpt
   if (emulators) frameSrc.push(EMULATOR_ORIGINS[0] as string);
   if (frameSrc.length === 0) frameSrc.push("'none'");
 
+  // EM-67: moodboard images load from Cloud Storage (or its emulator).
+  const imgSrc = ["'self'", "data:", "blob:", "https://firebasestorage.googleapis.com"];
+  if (emulators) imgSrc.push(EMULATOR_ORIGINS[2] as string);
+
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     "script-src": scriptSrc,
     "style-src": ["'self'", "'unsafe-inline'"],
-    "img-src": ["'self'", "data:", "blob:", "https://firebasestorage.googleapis.com"],
+    "img-src": imgSrc,
     "font-src": ["'self'"],
     "connect-src": connectSrc,
     "frame-src": frameSrc,

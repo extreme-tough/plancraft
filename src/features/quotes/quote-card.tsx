@@ -8,6 +8,7 @@ import {
   Coins,
   Pencil,
   RotateCw,
+  Sparkles,
   ShieldAlert,
   Trash2,
   Users,
@@ -19,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Radio } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import { amountErrorMessage, parseAmount } from "@/domain/amount-parser";
+import { Textarea } from "@/components/ui/textarea";
+import { FIT_MAX, fitScore, type FitScore } from "@/domain/fit-score";
 import { formatDate, formatMoneyCompact, formatMoneyWhole } from "@/domain/format";
 import { minorToMajor } from "@/domain/money";
 import type { Quote } from "@/domain/quote";
@@ -164,6 +167,73 @@ function ConvertedTotal({
   );
 }
 
+const DEDUCTION_TEXT: Record<FitScore["deductions"][number], string> = {
+  total_gap: "the total has a gap (−8)",
+  no_total: "the total can't be checked (−8)",
+  tax: "tax is unclear or extra (−6)",
+  unverified: "some values don't add up or aren't in the quote text (−6)",
+};
+
+/**
+ * EM-68: the fit score and its parts, all calculated by code. It only ranks the quotes: the user
+ * still links and confirms (EM-35).
+ */
+function FitScoreBlock({ fit, best }: { fit: FitScore; best: boolean }): React.ReactElement {
+  return (
+    <div className="flex flex-col gap-2 text-sm">
+      <p className="flex flex-wrap items-center gap-2">
+        {best && (
+          <Badge variant="success" className="text-success-foreground">
+            <Sparkles aria-hidden="true" />
+            Best fit by our checks
+          </Badge>
+        )}
+        <span className="font-semibold">Fit score: {fit.total} of 100</span>
+      </p>
+      <details>
+        <summary className="cursor-pointer rounded-sm text-accent-foreground">How the score is worked out</summary>
+        <ul className="mt-2 flex flex-col gap-1 rounded-lg bg-muted/60 p-3">
+          <li>
+            Budget fit: {fit.budget} of {FIT_MAX.budget}
+            {fit.notCompared && " (not compared yet)"}
+          </li>
+          <li>
+            Your needs covered: {fit.needs} of {FIT_MAX.needs}
+          </li>
+          <li>
+            Clear pricing: {fit.clarity} of {FIT_MAX.clarity}
+            {fit.deductions.length > 0 && `: ${fit.deductions.map((d) => DEDUCTION_TEXT[d]).join("; ")}`}
+          </li>
+        </ul>
+        <p className="mt-2 text-muted-foreground text-xs">Worked out from the checks on this card. It doesn&apos;t vouch for the vendor.</p>
+      </details>
+    </div>
+  );
+}
+
+/** EM-66: a plain-text team note on the quote, saved when the box loses focus. */
+function QuoteNote({ quote, onSave }: { quote: Quote; onSave: (note: string) => Promise<boolean> }): React.ReactElement {
+  const [text, setText] = useState(quote.note);
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const id = `note-${quote.id}`;
+  const save = async (): Promise<void> => {
+    if (text.trim() === quote.note) return;
+    setState("saving");
+    setState((await onSave(text)) ? "saved" : "failed");
+  };
+  return (
+    <div className="flex flex-col gap-1.5 text-sm">
+      <label htmlFor={id} className="font-medium">
+        Team note
+      </label>
+      <Textarea id={id} value={text} maxLength={1000} rows={2} aria-describedby={`${id}-state`} onChange={(e) => setText(e.target.value)} onBlur={() => void save()} />
+      <p id={`${id}-state`} aria-live="polite" className="text-muted-foreground text-xs">
+        {state === "saving" ? "Saving…" : state === "failed" ? "Not saved. Check your connection and try again." : state === "saved" ? "Note saved" : "Saved when you leave the box."}
+      </p>
+    </div>
+  );
+}
+
 /**
  * One quote (Figma "Quote summary card"): what the vendor wrote, and every check code ran on it.
  * Vendor names come only from the user's quote (EM-34), and every quote stays unverified until the
@@ -178,10 +248,12 @@ export function QuoteCard({
   locale,
   reading,
   selectable,
+  best,
   onRead,
   onEdit,
   onDelete,
   onConvertedTotal,
+  onNote,
 }: {
   quote: Quote;
   view: QuoteView | null;
@@ -191,10 +263,13 @@ export function QuoteCard({
   locale: string;
   reading: Reading | null;
   selectable: boolean;
+  /** EM-68: this quote has the single highest fit score among those compared. */
+  best: boolean;
   onRead: () => void;
   onEdit: () => void;
   onDelete: () => Promise<void>;
   onConvertedTotal: (minor: number) => Promise<void>;
+  onNote: (note: string) => Promise<boolean>;
 }): React.ReactElement {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -272,6 +347,8 @@ export function QuoteCard({
               {view.perGuest !== null && ` · ${formatMoneyWhole(view.perGuest, plan.currency, locale)} per guest`}
             </p>
           </div>
+
+          <FitScoreBlock fit={fitScore(view, line.amount)} best={best} />
 
           {view.currencyMismatch && <ConvertedTotal key={quote.convertedTotal ?? "none"} quote={quote} view={view} plan={plan} locale={locale} onSave={onConvertedTotal} />}
 
@@ -418,6 +495,8 @@ export function QuoteCard({
           )}
         </>
       )}
+
+      <QuoteNote quote={quote} onSave={onNote} />
 
       <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
         <ShieldAlert aria-hidden="true" className="size-3.5 shrink-0" />

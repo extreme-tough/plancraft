@@ -12,6 +12,7 @@ import { confirmLine, linkQuote, quoteDeleted } from "@/domain/edits";
 import { formatMoneyWhole } from "@/domain/format";
 import { lineGuests } from "@/domain/guests";
 import { detailsFromResponse, type Quote, type QuoteDetails } from "@/domain/quote";
+import { bestFit } from "@/domain/fit-score";
 import { comparableViews, viewQuote, type QuoteView } from "@/domain/quote-checks";
 import { QuoteResponseSchema, quoteRequestFor } from "@/domain/quote-contract";
 import type { BudgetLine, EventPlan } from "@/domain/schemas";
@@ -161,6 +162,7 @@ function LineQuotes({ stored, lineId, locale }: { stored: EventPlan; lineId: str
   const titles = useMemo(() => new Map(lineQuotes.map((quote, i) => [quote.id, vendorTitle(views.get(quote.id) ?? null, i)])), [lineQuotes, views]);
   const readViews = lineQuotes.flatMap((quote) => views.get(quote.id) ?? []);
   const comparable = comparableViews(readViews);
+  const best = line ? bestFit(readViews, line.amount) : null;
 
   // The linked quote starts selected.
   const linkedId = line?.quoteId ?? null;
@@ -349,6 +351,7 @@ function LineQuotes({ stored, lineId, locale }: { stored: EventPlan; lineId: str
               locale={locale}
               reading={reading.get(quote.id) ?? null}
               selectable
+              best={best === quote.id}
               onRead={() => void read(quote)}
               onEdit={() => setSheet({ kind: "manual", quoteId: quote.id })}
               onDelete={() => remove(quote, titles.get(quote.id) ?? "this vendor")}
@@ -359,12 +362,20 @@ function LineQuotes({ stored, lineId, locale }: { stored: EventPlan; lineId: str
                   setMessage("The total couldn't be saved. Check your connection and try again.");
                 }
               }}
+              onNote={async (note) => {
+                try {
+                  await repository.saveQuote(plan.id, { ...quote, note: note.trim() });
+                  return true;
+                } catch {
+                  return false;
+                }
+              }}
             />
           ))}
         </RadioGroup>
       )}
 
-      {readViews.length > 0 && <ComparisonTable views={readViews} titles={titles} plan={plan} locale={locale} />}
+      {readViews.length > 0 && <ComparisonTable views={readViews} titles={titles} plan={plan} line={line} best={best} locale={locale} />}
       <QuestionsPanel line={line} views={readViews} titles={titles} locale={locale} />
 
       {chosen && (

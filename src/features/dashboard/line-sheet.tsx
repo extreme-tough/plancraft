@@ -9,7 +9,8 @@ import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { Sheet, SheetDescription, SheetFooter, SheetHeader, SheetPanel, SheetPopup, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { amountErrorMessage, parseAmount } from "@/domain/amount-parser";
-import type { LineInput } from "@/domain/edits";
+import { Textarea } from "@/components/ui/textarea";
+import type { LineInput, PaymentInput } from "@/domain/edits";
 import { parseGuestCount } from "@/domain/event-input";
 import { minorToMajor } from "@/domain/money";
 import { CATEGORIES, type BudgetLine, type Category, type EventPlan } from "@/domain/schemas";
@@ -22,6 +23,8 @@ export interface LineSave {
   input: LineInput;
   /** Wanted Confirmed state; null for a new line (new lines start as estimates). */
   confirmed: boolean | null;
+  /** EM-64 */
+  payment: PaymentInput;
 }
 
 interface Draft {
@@ -33,6 +36,9 @@ interface Draft {
   guestSource: "event" | "own";
   ownGuests: string;
   confirmed: boolean;
+  paid: string;
+  balanceDue: string;
+  paymentNote: string;
 }
 
 function majorText(minor: number | null, currency: string): string {
@@ -49,6 +55,9 @@ function draftFrom(line: BudgetLine | null, currency: string): Draft {
     guestSource: line?.guestSource ?? "event",
     ownGuests: line?.ownGuests ? String(line.ownGuests) : "",
     confirmed: line?.label === "confirmed",
+    paid: majorText(line?.payment?.paid ?? null, currency),
+    balanceDue: line?.payment?.balanceDue ?? "",
+    paymentNote: line?.payment?.note ?? "",
   };
 }
 
@@ -102,12 +111,18 @@ export function LineSheet({
     if (draft.pricing === "per_guest" && draft.guestSource === "own" && (ownGuests === null || ownGuests < 1 || ownGuests > 10_000)) {
       next.ownGuests = "Enter a whole number of guests between 1 and 10,000.";
     }
+    // EM-64: what has been paid can't exceed what the line costs.
+    const paid = money(draft.paid, "paid");
+    const guests = draft.guestSource === "own" ? (ownGuests ?? 0) : plan.guestCount;
+    const lineAmount = draft.pricing === "flat" ? amount : unitCost * guests;
+    if (!next.paid && paid > lineAmount) next.paid = "The amount paid can't be more than the line's amount.";
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
     const saved = await onSave({
       input: { name: draft.name, category: draft.category, pricing: draft.pricing, amount, unitCost, guestSource: draft.guestSource, ownGuests },
       confirmed: line ? draft.confirmed : null,
+      payment: { paid, balanceDue: draft.balanceDue === "" ? null : draft.balanceDue, note: draft.paymentNote },
     });
     if (saved) onOpenChange(false);
   };
@@ -217,6 +232,18 @@ export function LineSheet({
                 />
               </div>
             )}
+            <fieldset className="flex flex-col gap-4 rounded-xl border p-3">
+              <legend className="px-1 font-medium text-sm">Payment</legend>
+              <FormField id="line-paid" label="Amount paid so far" error={errors.paid}>
+                {(aria) => <AmountField aria={aria} value={draft.paid} currency={plan.currency} locale={locale} suggestions={[]} onChange={(paid) => set({ paid })} />}
+              </FormField>
+              <FormField id="line-balance-due" label="Balance due by" hint="You'll get a reminder in the notifications a week before.">
+                {(aria) => <Input {...aria} type="date" value={draft.balanceDue} onChange={(e) => set({ balanceDue: e.target.value })} className="max-w-48" />}
+              </FormField>
+              <FormField id="line-payment-note" label="Payment note">
+                {(aria) => <Textarea {...aria} value={draft.paymentNote} maxLength={300} rows={2} onChange={(e) => set({ paymentNote: e.target.value })} />}
+              </FormField>
+            </fieldset>
             <FieldErrorText id="line-form" error={errors.form} />
           </SheetPanel>
           <SheetFooter className="flex-row flex-wrap justify-between gap-2">

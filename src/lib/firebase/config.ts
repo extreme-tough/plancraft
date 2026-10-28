@@ -7,6 +7,8 @@ export interface FirebasePublicConfig {
   authDomain: string;
   projectId: string;
   appId: string;
+  /** EM-67: the moodboard's Cloud Storage bucket. */
+  storageBucket: string;
   useEmulators: boolean;
 }
 
@@ -16,6 +18,7 @@ export const EMULATOR_PROJECT_ID = "demo-plancraft";
 export const EMULATOR_HOSTS = {
   auth: "http://127.0.0.1:9099",
   firestore: { host: "127.0.0.1", port: 8080 },
+  storage: { host: "127.0.0.1", port: 9199 },
 } as const;
 
 export function firebasePublicConfig(): FirebasePublicConfig {
@@ -26,6 +29,7 @@ export function firebasePublicConfig(): FirebasePublicConfig {
       authDomain: `${EMULATOR_PROJECT_ID}.firebaseapp.com`,
       projectId: EMULATOR_PROJECT_ID,
       appId: "demo-app",
+      storageBucket: `${EMULATOR_PROJECT_ID}.appspot.com`,
       useEmulators,
     };
   }
@@ -34,6 +38,7 @@ export function firebasePublicConfig(): FirebasePublicConfig {
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "",
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
   };
   const missing = Object.entries(config)
     .filter(([, value]) => value === "")

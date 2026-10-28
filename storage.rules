@@ -1,8 +1,26 @@
 rules_version = '2';
 
-// S0: deny everything. Slice S9 opens the owner's moodboard path (EM-67).
+// EM-67: moodboard images, under the owner's path only (EM-59). Under 1 MiB, JPEG, PNG or WebP,
+// with alt text as metadata. The shared demo account can't upload: its images would be shown to
+// every reviewer. The six-image limit is checked by the app. Everything else is denied.
 service firebase.storage {
   match /b/{bucket}/o {
+    match /users/{uid}/events/{eventId}/moodboard/{path=**} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      allow read, delete: if isOwner();
+      allow create: if isOwner()
+        && uid != 'demo-shared'
+        && request.resource.size < 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)')
+        && request.resource.metadata.keys().hasOnly(['alt'])
+        && request.resource.metadata.alt is string
+        && request.resource.metadata.alt.size() > 0
+        && request.resource.metadata.alt.size() <= 200;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

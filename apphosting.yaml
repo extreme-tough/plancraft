@@ -50,3 +50,6 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: 1:562722919365:web:16f7915befab2b07dfb1ac
     availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: plant-care-copilot.firebasestorage.app
+    availability: [BUILD, RUNTIME]

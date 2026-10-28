@@ -1,8 +1,9 @@
 "use client";
 
+import { fitScore } from "@/domain/fit-score";
 import { formatMoneyWhole } from "@/domain/format";
 import type { QuoteView } from "@/domain/quote-checks";
-import type { EventPlan } from "@/domain/schemas";
+import type { BudgetLine, EventPlan } from "@/domain/schemas";
 import { DifferenceText, TaxBadge, TotalCheckBadge } from "./quote-card";
 
 const NOT_STATED = <span className="text-muted-foreground">Not stated</span>;
@@ -15,11 +16,15 @@ export function ComparisonTable({
   views,
   titles,
   plan,
+  line,
+  best,
   locale,
 }: {
   views: readonly QuoteView[];
   titles: ReadonlyMap<string, string>;
   plan: EventPlan;
+  line: BudgetLine;
+  best: string | null;
   locale: string;
 }): React.ReactElement {
   const money = (view: QuoteView, minor: number | null): React.ReactNode =>
@@ -74,6 +79,11 @@ export function ComparisonTable({
     },
     { heading: "Included", cell: (view) => list(view.details.inclusions) },
     { heading: "Excluded or assumed", cell: (view) => list(view.details.exclusions) },
+    {
+      // EM-68
+      heading: "Fit score",
+      cell: (view) => `${fitScore(view, line.amount).total} of 100${best === view.quote.id ? " (best fit by our checks)" : ""}`,
+    },
     { heading: "Items to clarify", cell: (view) => (view.questions.length === 0 ? "None" : `${view.questions.length}`) },
   ];
 

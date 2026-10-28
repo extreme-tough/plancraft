@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { summarizeBudget } from "@/domain/budget";
-import { formatMoneyCompact, formatMoneyWhole } from "@/domain/format";
+import { formatDate, formatMoneyCompact, formatMoneyWhole } from "@/domain/format";
 import { lineGuests } from "@/domain/guests";
 import { isUnderFunded, lineEstimateTotal } from "@/domain/plan-build";
 import { CATEGORIES, type BudgetLine, type CostLabel, type EventPlan } from "@/domain/schemas";
@@ -83,6 +83,15 @@ function LineRow({
               </Badge>
             )}
           </p>
+          {line.payment && (
+            // EM-64
+            <p className="text-sm">
+              Paid {whole(line.payment.paid)} of {whole(line.amount)}
+              {line.payment.balanceDue && line.payment.paid < line.amount && ` · balance due ${formatDate(line.payment.balanceDue, locale)}`}
+              {line.payment.paid >= line.amount && line.amount > 0 && " · paid in full"}
+              {line.payment.note && <span className="block wrap-anywhere text-muted-foreground">{line.payment.note}</span>}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 items-start gap-1">
           <div className="flex flex-col items-end">
