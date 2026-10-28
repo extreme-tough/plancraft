@@ -144,6 +144,24 @@ export function unconfirmLine(plan: EventPlan, lineId: string): EventPlan {
   return finish({ ...plan, lines: plan.lines.map((l) => (l.id === lineId ? next : l)) });
 }
 
+/**
+ * EM-41: the user links a quote, so the line becomes Vendor Quoted (Unverified) at the quote's total
+ * in the event currency. A confirmed line has to be un-confirmed first (EM-42).
+ */
+export function linkQuote(plan: EventPlan, lineId: string, quoteId: string, total: Minor): EventPlan {
+  const current = line(plan, lineId);
+  if (current.label === "confirmed") throw new DomainError("locked_line", `"${current.name}" is confirmed. Un-confirm it to link another quote.`);
+  if (total <= 0) throw new DomainError("invalid_value", "This quote has no total to use.");
+  const next = transitionLabel(current, { type: "link_quote", quoteId, total }, plan.guestCount);
+  return finish({ ...plan, lines: plan.lines.map((l) => (l.id === lineId ? next : l)) });
+}
+
+/** EM-41: deleting a linked quote returns a Vendor Quoted line to AI Estimate, keeping its amount. */
+export function quoteDeleted(plan: EventPlan, quoteId: string): EventPlan {
+  if (!plan.lines.some((l) => l.quoteId === quoteId)) return plan;
+  return finish({ ...plan, lines: plan.lines.map((l) => transitionLabel(l, { type: "quote_deleted", quoteId }, plan.guestCount)) });
+}
+
 function taskFrom(id: string, input: TaskInput, status: Task["status"]): Task {
   const title = input.title.trim();
   if (title === "") throw new DomainError("invalid_value", "Enter a title for the task.");

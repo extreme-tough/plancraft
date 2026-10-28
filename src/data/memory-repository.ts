@@ -1,4 +1,5 @@
 import { ProposalSchema, type Proposal } from "@/domain/proposal";
+import { QuoteSchema, type Quote } from "@/domain/quote";
 import { EventPlanSchema, type EventPlan } from "@/domain/schemas";
 import { EventNotFoundError, VersionConflictError, type EventRepository } from "./repository";
 
@@ -7,6 +8,8 @@ export class MemoryEventRepository implements EventRepository {
   private readonly events = new Map<string, EventPlan>();
   private readonly proposals = new Map<string, Proposal>();
   private readonly listeners = new Map<string, Set<(plan: EventPlan | null) => void>>();
+  private readonly quotes = new Map<string, Quote>();
+  private readonly quoteListeners = new Map<string, Set<(quotes: Quote[]) => void>>();
 
   async getEvent(eventId: string): Promise<EventPlan | null> {
     const plan = this.events.get(eventId);
@@ -38,6 +41,7 @@ export class MemoryEventRepository implements EventRepository {
   async deleteEvent(eventId: string): Promise<void> {
     this.events.delete(eventId);
     for (const key of this.proposals.keys()) if (key.startsWith(`${eventId}/`)) this.proposals.delete(key);
+    for (const key of this.quotes.keys()) if (key.startsWith(`${eventId}/`)) this.quotes.delete(key);
     this.notify(eventId);
   }
 
@@ -67,6 +71,35 @@ export class MemoryEventRepository implements EventRepository {
 
   async deleteProposal(eventId: string, proposalId: string): Promise<void> {
     this.proposals.delete(`${eventId}/${proposalId}`);
+  }
+
+  async listQuotes(eventId: string): Promise<Quote[]> {
+    return [...this.quotes.entries()]
+      .filter(([key]) => key.startsWith(`${eventId}/`))
+      .map(([, quote]) => structuredClone(quote))
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
+  subscribeQuotes(eventId: string, onChange: (quotes: Quote[]) => void): () => void {
+    const set = this.quoteListeners.get(eventId) ?? new Set();
+    set.add(onChange);
+    this.quoteListeners.set(eventId, set);
+    void this.listQuotes(eventId).then(onChange);
+    return () => set.delete(onChange);
+  }
+
+  async saveQuote(eventId: string, quote: Quote): Promise<void> {
+    this.quotes.set(`${eventId}/${quote.id}`, QuoteSchema.parse(quote));
+    this.notifyQuotes(eventId);
+  }
+
+  async deleteQuote(eventId: string, quoteId: string): Promise<void> {
+    this.quotes.delete(`${eventId}/${quoteId}`);
+    this.notifyQuotes(eventId);
+  }
+
+  private notifyQuotes(eventId: string): void {
+    for (const listener of this.quoteListeners.get(eventId) ?? []) void this.listQuotes(eventId).then(listener);
   }
 
   private notify(eventId: string): void {

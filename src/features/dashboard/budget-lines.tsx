@@ -1,6 +1,7 @@
 "use client";
 
-import { CircleAlert, CircleCheck, FileText, Pencil, Plus, Sparkles } from "lucide-react";
+import { CircleAlert, CircleCheck, FileText, Pencil, Plus, Scale, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,14 @@ function LineRow({
           </Button>
         </div>
       </div>
+      <Link
+        href={`/events/${plan.id}/quotes?line=${encodeURIComponent(line.id)}`}
+        className="inline-flex items-center gap-1.5 self-start rounded-sm text-accent-foreground text-sm underline-offset-4 hover:underline"
+        aria-label={`Compare quotes for ${line.name}`}
+      >
+        <Scale aria-hidden="true" className="size-4" />
+        Compare quotes
+      </Link>
       {(estimate || details.length > 0) && (
         // UX-09: the line's own assumptions, expandable.
         <details className="group text-sm">

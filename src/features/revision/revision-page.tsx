@@ -26,6 +26,8 @@ import { localToday } from "@/lib/today";
 import { BudgetImpact, LineImpact, TaskImpact } from "./revision-diff";
 import { startRevision } from "./start-revision";
 
+const count = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 type Ai = { state: "idle" } | { state: "working" } | { state: "error"; error: AiError };
 
 function changeText(plan: EventPlan, field: Proposal["changes"][number]["field"], value: string, locale: string): string {
@@ -347,7 +349,7 @@ export function RevisionPage({ eventId, proposalId }: { eventId: string; proposa
                             </span>
                             <span className="text-muted-foreground text-sm">{option.rationale}</span>
                             <span className="text-muted-foreground text-xs">
-                              Changes {changed.lines.filter((l) => l.change !== "unchanged").length} lines and {changed.tasks.length} tasks
+                              Changes {count(changed.lines.filter((l) => l.change !== "unchanged").length, "line")} and {count(changed.tasks.length, "task")}
                             </span>
                             {option.assumptions.length > 0 && (
                               <span className="text-muted-foreground text-xs">Assumes: {option.assumptions.join(" ")}</span>

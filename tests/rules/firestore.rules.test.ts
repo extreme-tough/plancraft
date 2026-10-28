@@ -152,4 +152,35 @@ describe("FirestoreEventRepository against the rules", () => {
     expect(await repo.getEvent("event-1")).toBeNull();
     expect(await repo.listProposals("event-1")).toHaveLength(0);
   });
+
+  it("stores quotes in their own documents, for the owner only, and deletes them with the event (spec §8.5)", async () => {
+    const repo = new FirestoreEventRepository(db("alice"), "alice");
+    await repo.createEvent(plan());
+    const quote = {
+      id: "q1",
+      lineId: null,
+      source: "paste" as const,
+      rawText: "Saffron Table Caterers: thali dinner for 150 guests, ₹1,42,500 plus GST.",
+      extraction: null,
+      manual: null,
+      convertedTotal: null,
+      cancelled: false,
+      note: "",
+      createdAt: "2026-10-27T10:00:00.000Z",
+    };
+    await repo.saveQuote("event-1", quote);
+    expect(await repo.listQuotes("event-1")).toEqual([quote]);
+
+    const quoteDoc = (asUid: string | null) => doc(db(asUid), "users/alice/events/event-1/quotes/q1");
+    await assertFails(getDoc(quoteDoc("bob")));
+    await assertFails(getDoc(quoteDoc(DEMO_UID)));
+    await assertFails(getDoc(quoteDoc(null)));
+    await assertFails(setDoc(quoteDoc("bob"), quote));
+    // Size and shape are enforced: no extra fields, raw text at most 20,000 characters.
+    await assertFails(setDoc(quoteDoc("alice"), { ...quote, vendorVerified: true }));
+    await assertFails(setDoc(quoteDoc("alice"), { ...quote, rawText: "x".repeat(20_001) }));
+
+    await repo.deleteEvent("event-1");
+    expect(await repo.listQuotes("event-1")).toHaveLength(0);
+  });
 });

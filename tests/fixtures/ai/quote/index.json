@@ -1,0 +1,5 @@
+[
+  { "contains": "Saffron Table Caterers", "file": "hidden-charge.json" },
+  { "contains": "MARWAR KITCHEN CO.", "file": "unclear-tax.json" },
+  { "contains": "Silver Spoon Global Catering", "file": "other-currency.json" }
+]

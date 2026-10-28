@@ -1,0 +1,18 @@
+{
+  "vendorName": "Saffron Table Caterers",
+  "currency": "INR",
+  "items": [
+    { "description": "Vegetarian Rajasthani thali dinner", "kind": "item", "quantity": 150, "unitPrice": 950, "amount": 142500 },
+    { "description": "Welcome drinks and snacks", "kind": "item", "quantity": 150, "unitPrice": 180, "amount": 27000 },
+    { "description": "Service staff (20 stewards and 2 captains)", "kind": "fee", "quantity": null, "unitPrice": null, "amount": 18000 },
+    { "description": "GST at 5%", "kind": "tax", "quantity": null, "unitPrice": null, "amount": 9375 }
+  ],
+  "statedTotal": 206875,
+  "taxTreatment": "included",
+  "guestsCovered": 150,
+  "inclusions": ["All dishes vegetarian and labelled at the buffet", "Crockery and cutlery"],
+  "exclusions": ["Decoration", "Tables and chairs"],
+  "needsCoverage": [{ "need": "Vegetarian options clearly labelled", "status": "covered" }],
+  "clarifications": ["What is the overtime charge after 11 pm?"],
+  "validUntil": "2026-12-15"
+}

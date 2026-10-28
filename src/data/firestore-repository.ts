@@ -10,6 +10,7 @@ import {
   type Firestore,
 } from "firebase/firestore";
 import { ProposalSchema, type Proposal } from "@/domain/proposal";
+import { QuoteSchema, type Quote } from "@/domain/quote";
 import { EventPlanSchema, type EventPlan } from "@/domain/schemas";
 import {
   CorruptDataError,
@@ -22,6 +23,7 @@ import {
  * Firestore storage for one signed-in user (EM-39, EM-59). Paths:
  *   users/{uid}/events/{eventId}
  *   users/{uid}/events/{eventId}/proposals/{proposalId}
+ *   users/{uid}/events/{eventId}/quotes/{quoteId}
  * Everything read is validated with Zod before use; everything written is validated first too,
  * and the security rules check the same shape and the version step on the server.
  */
@@ -41,6 +43,20 @@ export class FirestoreEventRepository implements EventRepository {
 
   private proposalsPath(eventId: string): string {
     return `${this.eventsPath()}/${eventId}/proposals`;
+  }
+
+  private quotesPath(eventId: string): string {
+    return `${this.eventsPath()}/${eventId}/quotes`;
+  }
+
+  /** Valid quotes, oldest first. An invalid document is never shown as if it were valid. */
+  private parseQuotes(docs: ReadonlyArray<{ data(): unknown }>): Quote[] {
+    return docs
+      .flatMap((d) => {
+        const result = QuoteSchema.safeParse(d.data());
+        return result.success ? [result.data] : [];
+      })
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   }
 
   private parseEvent(path: string, data: unknown): EventPlan {
@@ -79,8 +95,11 @@ export class FirestoreEventRepository implements EventRepository {
   }
 
   async deleteEvent(eventId: string): Promise<void> {
-    const proposals = await getDocs(collection(this.db, this.proposalsPath(eventId)));
-    await Promise.all(proposals.docs.map((d) => deleteDoc(d.ref)));
+    const [proposals, quotes] = await Promise.all([
+      getDocs(collection(this.db, this.proposalsPath(eventId))),
+      getDocs(collection(this.db, this.quotesPath(eventId))),
+    ]);
+    await Promise.all([...proposals.docs, ...quotes.docs].map((d) => deleteDoc(d.ref)));
     await deleteDoc(this.eventRef(eventId));
   }
 
@@ -126,5 +145,22 @@ export class FirestoreEventRepository implements EventRepository {
 
   async deleteProposal(eventId: string, proposalId: string): Promise<void> {
     await deleteDoc(doc(this.db, this.proposalsPath(eventId), proposalId));
+  }
+
+  async listQuotes(eventId: string): Promise<Quote[]> {
+    return this.parseQuotes((await getDocs(collection(this.db, this.quotesPath(eventId)))).docs);
+  }
+
+  subscribeQuotes(eventId: string, onChange: (quotes: Quote[]) => void, onError: (error: Error) => void): () => void {
+    return onSnapshot(collection(this.db, this.quotesPath(eventId)), (snapshot) => onChange(this.parseQuotes(snapshot.docs)), onError);
+  }
+
+  async saveQuote(eventId: string, quote: Quote): Promise<void> {
+    const stored = QuoteSchema.parse(quote);
+    await setDoc(doc(this.db, this.quotesPath(eventId), stored.id), stored);
+  }
+
+  async deleteQuote(eventId: string, quoteId: string): Promise<void> {
+    await deleteDoc(doc(this.db, this.quotesPath(eventId), quoteId));
   }
 }

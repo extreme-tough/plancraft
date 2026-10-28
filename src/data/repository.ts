@@ -1,8 +1,9 @@
 import type { Proposal } from "@/domain/proposal";
+import type { Quote } from "@/domain/quote";
 import type { EventPlan } from "@/domain/schemas";
 
 /**
- * Storage for one user's events and proposals. Two implementations: in memory (tests) and
+ * Storage for one user's events, proposals and quotes. Two implementations: in memory (tests) and
  * Firestore (the app). Every plan write is version-checked (EM-62): it succeeds only if the stored
  * version is the one the caller last read, and it stores version + 1.
  */
@@ -24,6 +25,12 @@ export interface EventRepository {
   listProposals(eventId: string): Promise<Proposal[]>;
   saveProposal(proposal: Proposal): Promise<void>;
   deleteProposal(eventId: string, proposalId: string): Promise<void>;
+
+  /** Quotes, one document each (spec §8.5), oldest first. Documents that fail validation are left out. */
+  listQuotes(eventId: string): Promise<Quote[]>;
+  subscribeQuotes(eventId: string, onChange: (quotes: Quote[]) => void, onError: (error: Error) => void): () => void;
+  saveQuote(eventId: string, quote: Quote): Promise<void>;
+  deleteQuote(eventId: string, quoteId: string): Promise<void>;
 }
 
 /** Someone else changed the event first (EM-62). The UI reloads `latest` and says so. */

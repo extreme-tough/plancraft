@@ -1,0 +1,17 @@
+{
+  "vendorName": "Marwar Kitchen Co.",
+  "currency": "INR",
+  "items": [
+    { "description": "Rajasthani thali", "kind": "item", "quantity": 140, "unitPrice": 1100, "amount": 154000 },
+    { "description": "Live chaat counter", "kind": "item", "quantity": null, "unitPrice": null, "amount": 15000 },
+    { "description": "Kulfi and paan station", "kind": "item", "quantity": null, "unitPrice": null, "amount": 8000 }
+  ],
+  "statedTotal": 177000,
+  "taxTreatment": "unclear",
+  "guestsCovered": 140,
+  "inclusions": ["Cooks, servers and serving equipment"],
+  "exclusions": [],
+  "needsCoverage": [{ "need": "Vegetarian options clearly labelled", "status": "not_mentioned" }],
+  "clarifications": ["How much would the price change if the menu changes?", "Is the 50% advance refundable if the event is cancelled?"],
+  "validUntil": null
+}

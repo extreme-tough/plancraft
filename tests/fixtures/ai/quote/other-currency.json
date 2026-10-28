@@ -1,0 +1,16 @@
+{
+  "vendorName": "Silver Spoon Global Catering",
+  "currency": "USD",
+  "items": [
+    { "description": "Plated vegetarian dinner", "kind": "item", "quantity": 150, "unitPrice": 14, "amount": 2100 },
+    { "description": "Service and set-up fee", "kind": "fee", "quantity": null, "unitPrice": null, "amount": 380 }
+  ],
+  "statedTotal": 2480,
+  "taxTreatment": "included",
+  "guestsCovered": 150,
+  "inclusions": ["Clearly labelled vegetarian and vegan options", "Linen", "Staff"],
+  "exclusions": ["Staff travel outside the city limits"],
+  "needsCoverage": [{ "need": "Vegetarian options clearly labelled", "status": "covered" }],
+  "clarifications": [],
+  "validUntil": null
+}
