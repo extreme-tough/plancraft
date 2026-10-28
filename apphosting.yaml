@@ -28,6 +28,13 @@ env:
   - variable: AI_DAILY_CAP
     value: "2000"
     availability: [RUNTIME]
+  # EM-63: only Cloud Scheduler's service account, calling this URL, can reset the demo (docs/setup.md §8).
+  - variable: DEMO_RESET_INVOKER
+    value: demo-reset@plant-care-copilot.iam.gserviceaccount.com
+    availability: [RUNTIME]
+  - variable: DEMO_RESET_AUDIENCE
+    value: https://plancraft--plant-care-copilot.asia-southeast1.hosted.app/api/internal/demo-reset
+    availability: [RUNTIME]
 
   # Firebase web config: public by design, inlined into the browser bundle at build time (ENG-02).
   # The API key is restricted in Google Cloud to the Hosting domains and Firebase APIs (docs/setup.md §4).

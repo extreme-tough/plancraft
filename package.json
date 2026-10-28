@@ -18,7 +18,8 @@
     "test:rules": "firebase emulators:exec --only firestore,storage --project demo-plancraft \"vitest run --config vitest.rules.config.mts\"",
     "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-plancraft \"playwright test\"",
     "check:size": "node scripts/check-repo-size.mjs",
-    "check:bundle": "node scripts/check-bundle-size.mjs"
+    "check:bundle": "node scripts/check-bundle-size.mjs",
+    "demo:reset": "node scripts/demo-reset.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -27,6 +28,7 @@
     "clsx": "^2.1.1",
     "firebase": "^13.1.0",
     "firebase-admin": "^14.5.0",
+    "jose": "6.2.13",
     "lucide-react": "^1.61.0",
     "next": "15.5.28",
     "react": "19.1.0",

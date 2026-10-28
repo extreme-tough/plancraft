@@ -129,6 +129,25 @@ describe("FirestoreEventRepository against the rules", () => {
     expect((await reviewerB.getEvent("event-1"))?.occasion).toBe("A's change");
   });
 
+  it("of two saves of the same version at the same moment, one wins and the other is a conflict, never a lost write", async () => {
+    const reviewerA = new FirestoreEventRepository(db(DEMO_UID), DEMO_UID);
+    const reviewerB = new FirestoreEventRepository(db(DEMO_UID), DEMO_UID);
+    for (let round = 0; round < 5; round++) {
+      await env.clearFirestore();
+      const created = await reviewerA.createEvent(plan({ isDemo: true }));
+      const results = await Promise.all([
+        reviewerA.saveEvent({ ...created, occasion: "A's change" }, 0).then(() => "saved", (e: unknown) => e),
+        reviewerB.saveEvent({ ...created, occasion: "B's change" }, 0).then(() => "saved", (e: unknown) => e),
+      ]);
+      const stored = await reviewerA.getEvent("event-1");
+      const outcome = results.map((r) => (r === "saved" ? "saved" : r instanceof VersionConflictError ? "conflict" : String(r)));
+      expect(outcome.sort(), `round ${round}`).toEqual(["conflict", "saved"]);
+      expect(stored?.version).toBe(1);
+      const conflict = results.find((r) => r instanceof VersionConflictError) as VersionConflictError;
+      expect(conflict.latest.occasion).toBe(stored?.occasion);
+    }
+  });
+
   it("stores proposals apart from the plan and deletes them with the event (EM-53)", async () => {
     const repo = new FirestoreEventRepository(db("alice"), "alice");
     await repo.createEvent(plan());

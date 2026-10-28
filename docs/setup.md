@@ -61,6 +61,41 @@ gcloud firestore fields ttls update expiresAt --collection-group=counters --enab
 
 Demo-account AI limits count per IP (ENG-08). `TRUSTED_PROXY_HOPS` (default 2) says how many proxies append to `X-Forwarded-For` in front of the app. After the first deploy, log one request's `X-Forwarded-For` and confirm the client's address is that many entries from the right; adjust the variable in `apphosting.yaml` if not.
 
-## 8. Nightly demo reset (slice S8)
+## 8. Nightly demo reset (EM-63)
 
-Cloud Scheduler calls `POST /api/internal/demo-reset` at 3:00 AM IST with an OIDC token. The exact `gcloud scheduler jobs create http` command is added here in S8.
+Cloud Scheduler calls `POST /api/internal/demo-reset` at 3:00 AM IST. The route (`src/server/demo-reset.ts`):
+
+1. deletes every event in the demo account;
+2. writes the demo persona's inputs as the pinned demo event;
+3. generates its plan with live Gemini, through the plan call's own validation;
+4. adds the three sample quotes to its catering line, each read by the quote call;
+5. records the reset time and outcome in `/demo/status`, which the banner shows through `GET /api/demo/status`.
+
+Only Cloud Scheduler's service account can call it. The request carries a Google-signed OIDC token, and the app checks its signature, issuer, audience (the reset URL), expiry and service-account email (`src/server/verify-oidc.ts`). Without `DEMO_RESET_INVOKER` and `DEMO_RESET_AUDIENCE` set, the route answers 404.
+
+If the plan can't be generated, the event stays without a plan and the route answers 503, so Cloud Scheduler retries: 3 times, 5 minutes apart. Each retry runs the whole reset again.
+
+One-time setup (replace `<PROJECT_ID>`; the backend URL is the App Hosting URL):
+
+```bash
+gcloud services enable cloudscheduler.googleapis.com --project <PROJECT_ID>
+gcloud iam service-accounts create demo-reset --display-name "PlanCraft demo reset" --project <PROJECT_ID>
+gcloud scheduler jobs create http plancraft-demo-reset   --project <PROJECT_ID> --location asia-southeast1   --schedule "0 3 * * *" --time-zone "Asia/Kolkata"   --http-method POST --uri "https://<BACKEND_URL>/api/internal/demo-reset"   --oidc-service-account-email "demo-reset@<PROJECT_ID>.iam.gserviceaccount.com"   --oidc-token-audience "https://<BACKEND_URL>/api/internal/demo-reset"   --attempt-deadline 600s --max-retry-attempts 3 --min-backoff 300s --max-backoff 300s --max-doublings 0
+```
+
+The service account needs no roles: the app itself checks the token, and the backend is public. Whoever creates the job needs `iam.serviceAccounts.actAs` on it (project Owner and Editor have it). Then set the two variables in `apphosting.yaml` (already done for `plant-care-copilot`):
+
+```yaml
+- variable: DEMO_RESET_INVOKER
+  value: demo-reset@<PROJECT_ID>.iam.gserviceaccount.com
+- variable: DEMO_RESET_AUDIENCE
+  value: https://<BACKEND_URL>/api/internal/demo-reset
+```
+
+**Run it by hand** before recording the video and before submitting:
+
+```bash
+pnpm demo:reset
+```
+
+This runs the Scheduler job now and waits until the app records the new reset. It uses `$GOOGLE_OAUTH_ACCESS_TOKEN`, `gcloud`, or the Firebase CLI's login, whichever is available. Each run uses 4 to 8 AI calls (one plan and three quotes, each with at most one repair).

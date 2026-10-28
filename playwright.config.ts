@@ -15,6 +15,9 @@ const testEnv = {
   DEMO_SESSION_LIMIT_PER_MINUTE: "1000",
   AI_DEMO_IP_LIMIT_PER_MINUTE: "1000",
   AI_DEMO_IP_LIMIT_PER_DAY: "100000",
+  // The reset route is on, so tests can check that it refuses everyone but Cloud Scheduler.
+  DEMO_RESET_INVOKER: "demo-reset@demo-plancraft.iam.gserviceaccount.com",
+  DEMO_RESET_AUDIENCE: `http://localhost:${PORT}/api/internal/demo-reset`,
 };
 
 export default defineConfig({

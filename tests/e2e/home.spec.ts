@@ -21,6 +21,18 @@ test.describe("security headers (ENG-08)", () => {
     expect(first.headers()["x-powered-by"]).toBeUndefined();
   });
 
+  test("the demo reset refuses everyone but Cloud Scheduler's signed token (EM-63)", async ({ request }) => {
+    const attempts: Array<Record<string, string>> = [{}, { authorization: "Bearer not-a-token" }, { authorization: "Bearer a.b.c" }];
+    for (const headers of attempts) {
+      const response = await request.post("/api/internal/demo-reset", { headers });
+      expect(response.status()).toBe(401);
+      expect(response.headers()["cache-control"]).toBe("no-store");
+    }
+    const status = await request.get("/api/demo/status");
+    expect(status.ok()).toBe(true);
+    expect(((await status.json()) as { ok: boolean }).ok).toBe(true);
+  });
+
   test("the demo-session endpoint refuses cross-site calls", async ({ request }) => {
     const response = await request.post("/api/demo/session", { headers: { "sec-fetch-site": "cross-site" } });
     expect(response.status()).toBe(403);

@@ -48,6 +48,11 @@ describe("apphosting.yaml (the live deployment)", () => {
     expect(() => parseServerEnv(Object.fromEntries(vars))).not.toThrow();
   });
 
+  it("turns on the demo reset only for the scheduler's account calling the reset URL (EM-63)", () => {
+    expect(vars.get("DEMO_RESET_INVOKER")).toMatch(/^demo-reset@[a-z0-9-]+\.iam\.gserviceaccount\.com$/);
+    expect(vars.get("DEMO_RESET_AUDIENCE")).toMatch(/^https:\/\/[^/]+\/api\/internal\/demo-reset$/);
+  });
+
   it("holds no secrets in plain values (ENG-02)", () => {
     // NEXT_PUBLIC_* values ship to every browser (the Firebase web config is public by design);
     // anything else named like a credential must come from Secret Manager.

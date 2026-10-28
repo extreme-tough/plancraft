@@ -3,12 +3,13 @@
 import { LogIn, LogOut, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSignedIn } from "@/features/auth/auth-provider";
 import { loadFirebase } from "@/lib/firebase/lazy";
+import { useLocale } from "@/lib/locale";
 
 /** Brand, who is signed in, and the sign-in / sign-out controls (EM-57, EM-58). */
 export function AppHeader(): React.ReactElement {
@@ -80,8 +81,33 @@ export function AppHeader(): React.ReactElement {
 }
 
 /** EM-58: always visible in the shared demo account. */
+/** When the nightly reset last ran (EM-63), in the viewer's own time and locale. Null until known. */
+function useLastReset(enabled: boolean, locale: string): string | null {
+  const [text, setText] = useState<string | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    let active = true;
+    fetch("/api/demo/status")
+      .then((response) => (response.ok ? (response.json() as Promise<{ data?: { lastResetAt?: unknown } }>) : null))
+      .then((body) => {
+        const at = body?.data?.lastResetAt;
+        if (!active || typeof at !== "string") return;
+        const date = new Date(at);
+        if (Number.isNaN(date.getTime())) return;
+        setText(new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(date));
+      })
+      // The banner simply leaves the time out.
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [enabled, locale]);
+  return text;
+}
+
 export function DemoBanner(): React.ReactElement | null {
   const { isDemo } = useSignedIn();
+  const lastReset = useLastReset(isDemo, useLocale());
   if (!isDemo) return null;
   return (
     <div className="mx-auto max-w-6xl px-4 pt-4 sm:px-8">
@@ -90,7 +116,7 @@ export function DemoBanner(): React.ReactElement | null {
         <AlertDescription className="text-foreground">
           <p>
             <strong>Shared demo account:</strong> other reviewers can see and change this data. It resets every night at
-            3:00 AM IST. Sign in with Google for a private workspace.
+            3:00 AM IST{lastReset && ` (last reset: ${lastReset})`}. Sign in with Google for a private workspace.
           </p>
         </AlertDescription>
       </Alert>

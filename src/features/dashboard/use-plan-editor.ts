@@ -65,6 +65,8 @@ export function usePlanEditor(stored: EventPlan): PlanEditor {
       } catch (error) {
         setPending(null);
         if (error instanceof VersionConflictError) {
+          // Show the version that won at once, even if the live subscription is behind (EM-62).
+          setPending(error.latest);
           setSave("saved");
           setNotice({
             kind: "conflict",

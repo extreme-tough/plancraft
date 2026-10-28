@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import type { EventPlan } from "@/domain/schemas";
 import { useSignedIn } from "@/features/auth/auth-provider";
+import { rememberDemoEvent } from "@/lib/demo-pointer";
 import { useLocale } from "@/lib/locale";
 import { localToday } from "@/lib/today";
 import { Dashboard } from "./dashboard";
@@ -21,10 +22,16 @@ type Load =
 
 /** One event, kept live so other people's changes in the shared demo appear (EM-62). */
 export function EventPage({ eventId }: { eventId: string }): React.ReactElement {
-  const { repository } = useSignedIn();
+  const { repository, isDemo } = useSignedIn();
   const locale = useLocale();
   const [today] = useState(localToday);
   const [load, setLoad] = useState<Load>({ state: "loading" });
+  const found = load.state === "ready";
+
+  // EM-58: the demo reopens on the event this browser last worked on.
+  useEffect(() => {
+    if (isDemo && found) rememberDemoEvent(eventId);
+  }, [isDemo, found, eventId]);
 
   useEffect(
     () =>

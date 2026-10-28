@@ -1,7 +1,8 @@
 "use client";
 
-import { CalendarDays, Plus, Users } from "lucide-react";
+import { CalendarDays, Pin, Plus, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -11,26 +12,36 @@ import { Spinner } from "@/components/ui/spinner";
 import type { EventPlan } from "@/domain/schemas";
 import { formatDate, formatMoneyCompact } from "@/domain/format";
 import { useSignedIn } from "@/features/auth/auth-provider";
+import { firstDemoVisit, openingDemoEvent, rememberedDemoEvent } from "@/lib/demo-pointer";
 import { useLocale } from "@/lib/locale";
+
+const pinnedFirst = (events: EventPlan[]): EventPlan[] => [...events].sort((a, b) => Number(b.demoPinned) - Number(a.demoPinned));
 
 type Load = { state: "loading" } | { state: "error"; message: string } | { state: "ready"; events: EventPlan[] };
 
 /** The signed-in user's events (EM-39, EM-40), and the way into creating one (EM-01). */
 export function EventsHome(): React.ReactElement {
-  const { repository } = useSignedIn();
+  const { repository, isDemo } = useSignedIn();
   const locale = useLocale();
+  const router = useRouter();
   const [load, setLoad] = useState<Load>({ state: "loading" });
 
   useEffect(() => {
     let active = true;
     repository
       .listEvents()
-      .then((events) => active && setLoad({ state: "ready", events }))
+      .then((events) => {
+        if (!active) return;
+        // EM-58: a tab's first visit to the demo opens this browser's last demo event, else the pinned one.
+        const target = isDemo && firstDemoVisit() ? openingDemoEvent(events, rememberedDemoEvent()) : null;
+        if (target) router.replace(`/events/${target}`);
+        else setLoad({ state: "ready", events: pinnedFirst(events) });
+      })
       .catch(() => active && setLoad({ state: "error", message: "Your events couldn't be loaded. Please reload the page." }));
     return () => {
       active = false;
     };
-  }, [repository]);
+  }, [repository, isDemo, router]);
 
   return (
     <section aria-labelledby="events-heading" className="flex flex-col gap-4">
@@ -89,6 +100,12 @@ export function EventsHome(): React.ReactElement {
                       {event.guestCount.toLocaleString(locale)} guests
                     </span>
                     <Badge variant="outline">{formatMoneyCompact(event.budget, event.currency, locale)}</Badge>
+                    {event.demoPinned && (
+                      <Badge variant="info">
+                        <Pin aria-hidden="true" />
+                        Demo event, reset nightly
+                      </Badge>
+                    )}
                   </CardDescription>
                 </CardHeader>
               </Card>

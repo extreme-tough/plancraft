@@ -3,6 +3,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocFromServer,
   getDocs,
   onSnapshot,
   runTransaction,
@@ -84,14 +85,27 @@ export class FirestoreEventRepository implements EventRepository {
   async saveEvent(next: EventPlan, expectedVersion: number): Promise<EventPlan> {
     const stored = EventPlanSchema.parse({ ...next, version: expectedVersion + 1 });
     const ref = this.eventRef(next.id);
-    return runTransaction(this.db, async (transaction) => {
-      const snapshot = await transaction.get(ref);
-      if (!snapshot.exists()) throw new EventNotFoundError(next.id);
-      const current = this.parseEvent(ref.path, snapshot.data());
-      if (current.version !== expectedVersion) throw new VersionConflictError(current);
-      transaction.set(ref, stored);
-      return stored;
-    });
+    try {
+      return await runTransaction(this.db, async (transaction) => {
+        const snapshot = await transaction.get(ref);
+        if (!snapshot.exists()) throw new EventNotFoundError(next.id);
+        const current = this.parseEvent(ref.path, snapshot.data());
+        if (current.version !== expectedVersion) throw new VersionConflictError(current);
+        transaction.set(ref, stored);
+        return stored;
+      });
+    } catch (error) {
+      if (error instanceof VersionConflictError || error instanceof EventNotFoundError) throw error;
+      // Two saves at the same moment: the other one commits between this one's read and its write,
+      // and the rules' version step (version == stored + 1) refuses this write. That is a conflict
+      // too, not a connection problem, whenever the stored version has moved on (EM-62).
+      const latest = await getDocFromServer(ref).catch(() => null);
+      if (latest?.exists()) {
+        const current = this.parseEvent(ref.path, latest.data());
+        if (current.version !== expectedVersion) throw new VersionConflictError(current);
+      }
+      throw error;
+    }
   }
 
   async deleteEvent(eventId: string): Promise<void> {

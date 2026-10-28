@@ -81,6 +81,8 @@ test.describe("Google sign-in (EM-57)", () => {
     const popupPromise = page.waitForEvent("popup");
     await page.getByRole("button", { name: "Sign in with Google" }).click();
     const popup = await popupPromise;
+    // Clicking before the emulator's page has wired up its buttons was this test's known flake.
+    await popup.waitForLoadState();
     // The Auth emulator's stand-in for Google's sign-in page.
     await popup.getByText("Add new account").click();
     await popup.getByText("Auto-generate user information").click();
@@ -90,5 +92,10 @@ test.describe("Google sign-in (EM-57)", () => {
     await expect(page.getByText(DEMO_BANNER)).toBeHidden();
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "Your events" })).toBeVisible();
+
+    // UX-11: the signed-in, empty state.
+    await expect(page.getByText("No events yet")).toBeVisible();
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+    expect(results.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
   });
 });

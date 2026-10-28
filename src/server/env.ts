@@ -34,6 +34,8 @@ const ServerEnvSchema = z
     AI_DEMO_IP_LIMIT_PER_DAY: z.coerce.number().int().positive().default(50),
     /** Service account Cloud Scheduler signs its OIDC token with (EM-63, slice S8). */
     DEMO_RESET_INVOKER: z.string().min(1).optional(),
+    /** The reset URL, which is the audience of that token. The reset route is off without both. */
+    DEMO_RESET_AUDIENCE: z.url().optional(),
   })
   .transform((env) => ({
     ...env,

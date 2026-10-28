@@ -236,6 +236,11 @@ export function Dashboard({ stored, today, locale }: { stored: EventPlan; today:
   const close = (open: boolean): void => {
     if (!open) setSheet(null);
   };
+  // EM-62: a refused save closes the sheet, so the notice and the version that won are in view.
+  const conflicted = editor.notice?.kind === "conflict";
+  useEffect(() => {
+    if (conflicted) setSheet(null);
+  }, [conflicted]);
 
   const editingLine = sheet?.kind === "line" && sheet.id ? (plan.lines.find((l) => l.id === sheet.id) ?? null) : null;
   const editingTask = sheet?.kind === "task" && sheet.id ? (plan.tasks.find((t) => t.id === sheet.id) ?? null) : null;
