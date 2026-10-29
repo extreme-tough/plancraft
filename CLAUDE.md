@@ -66,7 +66,7 @@ How the routes map to the Figma screens:
 
 ## AI integration rules
 
-- There are exactly three AI calls: `/api/ai/plan`, `/api/ai/revise` and `/api/ai/quote`. All of them go through `src/server/ai/pipeline.ts`, which does the following in order:
+- There are exactly four AI calls: `/api/ai/plan`, `/api/ai/revise`, `/api/ai/quote` and `/api/ai/describe` (AI-13: fills the event form's empty fields from the user's description, checked by code). All of them go through `src/server/ai/pipeline.ts`, which does the following in order:
   1. Verify the ID token.
   2. Check rate limits.
   3. Check the request with Zod.

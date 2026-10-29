@@ -3,7 +3,7 @@
  * tests. A provider only transports text: parsing, schemas and rules are the pipeline's job, because
  * provider-side enforcement isn't trusted (spec §7.2.3).
  */
-export type AiCallName = "plan" | "revise" | "quote";
+export type AiCallName = "plan" | "revise" | "quote" | "describe";
 
 export interface ModelRequest {
   call: AiCallName;

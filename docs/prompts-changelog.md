@@ -1,6 +1,6 @@
 # Prompt changelog
 
-How the three prompts and their model contracts changed. The prompts are in [src/server/ai/prompts](../src/server/ai/prompts), and each one exports a version string (`plan-v1`, `revise-v1`, `quote-v1`). Bump the version with every wording change and add an entry here.
+How the four prompts and their model contracts changed. The prompts are in [src/server/ai/prompts](../src/server/ai/prompts), and each one exports a version string (`plan-v1`, `revise-v1`, `quote-v1`, `describe-v1`). Bump the version with every wording change and add an entry here.
 
 The contracts are as important as the wording. The model's output is held to a Zod schema plus rule functions, so most of the "prompt engineering" went into what the model is *allowed* to return, rather than into persuading it.
 
@@ -50,3 +50,11 @@ The contracts are as important as the wording. The model's output is held to a Z
 - **`needsCoverage` has exactly one entry per need, with the need's text copied.** Code matches them by text, so the comparison table can show coverage per need.
 - **Rules:** Q1 (discounts are zero or negative, everything else zero or positive) and Q2 (one needs-coverage entry per need) fail the response. Q3–Q5 only flag values. A value whose digits don't appear in the quote text shows "Check: not found in quote text" and lowers the fit score's clarity part (EM-68).
 - **The model is told never to state availability, ratings or reliability** (EM-34, EM-35). No schema field could carry them anyway.
+
+## describe-v1 (29 Oct 2026)
+
+- **First version,** added at the founder's request so the event form can be filled from a plain-language description (AI-13).
+- **Copy, never guess:** every field is null unless the description states it. The budget is copied as written, without the currency symbol ("8 lakh", "15,000"), so the app's own amount parser reads it exactly as if the user had typed it (EM-38).
+- **Dates:** only a specific day counts. The prompt carries the device's date in `<today>`, so "26 February" resolves to the next one.
+- **Code checks after Zod:** no rule fails the whole response. Instead, code drops each value it can't trust: an unknown country or currency, a date that isn't a real day after today, and a budget or guest count that doesn't appear in the user's own text (the same grounding idea as the quote call's Q3/Q4).
+- **Settings:** temperature 0 and a 30-second timeout.

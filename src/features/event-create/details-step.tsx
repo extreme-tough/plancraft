@@ -86,6 +86,16 @@ interface Props {
   onPartChange: (index: number, patch: Partial<PartInput>) => void;
   description: string;
   onDescription: (description: string) => void;
+  describe: DescribeState;
+  onFillFromDescription: () => void;
+}
+
+/** The "Fill in the form from my description" call (AI-13). */
+export interface DescribeState {
+  busy: boolean;
+  /** What was filled in, shown under the button. */
+  message: string | null;
+  error: string | null;
 }
 
 /** A white card, as in the Figma "Event Creation" frames. */
@@ -159,8 +169,9 @@ export function DetailsStep(props: Props): React.ReactElement {
           <FormField
             id={id("description")}
             label="Describe your event in your own words"
-            hint="The more you tell us, the more personal the plan: the vibe, traditions, food, music, who's coming and any needs, must-haves and things to skip. The AI plans from this together with the details below."
+            hint="The more you tell us, the more personal the plan: the date, place, budget and guests, the vibe, traditions, food, music, any needs, must-haves and things to skip. The AI plans from this together with the details below."
             optional
+            error={props.describe.error}
             labelClassName="font-semibold text-base"
           >
             {(aria) => (
@@ -169,11 +180,23 @@ export function DetailsStep(props: Props): React.ReactElement {
                 value={props.description}
                 maxLength={LIMITS.description}
                 rows={5}
-                placeholder="For example: A colourful outdoor wedding with a Mehendi evening the night before. Mostly vegetarian food, a few elderly relatives who need step-free access, and we'd love live folk music."
+                placeholder="For example: Ananya and Rohan's wedding in Jaipur on 26 February, about 150 guests and a budget of 8 lakh, with a Mehendi evening for 60 the night before. Mostly vegetarian food, a few elderly relatives who need step-free access, and we'd love live folk music."
                 onChange={(e) => props.onDescription(e.target.value)}
               />
             )}
           </FormField>
+          <div className="mt-3 flex flex-col items-start gap-2">
+            <Button variant="outline" loading={props.describe.busy} onClick={props.onFillFromDescription}>
+              <Sparkles aria-hidden="true" />
+              Fill in the form from my description
+            </Button>
+            {props.describe.message && (
+              <p className="flex items-start gap-2 text-sm">
+                <Sparkles aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent-foreground" />
+                <span>{props.describe.message}</span>
+              </p>
+            )}
+          </div>
         </FormCard>
 
         <FormCard>

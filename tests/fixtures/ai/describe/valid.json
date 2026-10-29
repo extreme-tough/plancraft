@@ -1,0 +1,20 @@
+{
+  "eventType": "wedding",
+  "useCase": "wedding",
+  "occasion": "Ananya & Rohan's wedding",
+  "city": "Jaipur",
+  "country": "IN",
+  "eventDate": "2030-02-26",
+  "currency": "INR",
+  "budgetText": "8 lakh",
+  "guestCount": 150,
+  "parts": [{ "name": "Mehendi evening", "guestCount": 60 }],
+  "priorities": ["venue", "catering", "entertainment"],
+  "mustHaves": ["Indoor backup for cold evenings", "Live dhol and folk musicians for the baraat"],
+  "experience": null,
+  "atmosphere": "Traditional Rajasthani, colourful outdoor lawn",
+  "ageGroups": ["children", "adults", "seniors"],
+  "cultural": "Fully vegetarian food, with a separate Jain counter for about 20 guests",
+  "accessibility": "One grandparent uses a wheelchair: step-free access and seating near the stage",
+  "venueConstraints": "Outdoor lawn with an indoor backup"
+}

@@ -10,6 +10,8 @@ flowchart LR
   open -. Sign in with Google .-> own[Your own events]
   demo --> create[Create an event<br/>details, then questions]
   own --> create
+  create -. Fill in from my description .-> ai0[Form values<br/>AI call 4, checked by code]
+  ai0 --> create
   create --> plan[Generate the plan<br/>AI call 1]
   plan --> dash[Plan dashboard<br/>edit lines and tasks, confirm, mark done]
   dash -- budget, date or guests --> rev[Before/after<br/>calculated by code]
@@ -41,7 +43,7 @@ flowchart TB
     fs[(Cloud Firestore<br/>users/uid/events/**)]
     st[(Cloud Storage<br/>moodboard images)]
     subgraph AppHosting[Firebase App Hosting on Cloud Run]
-      api["/api/ai/plan, revise, quote"]
+      api["/api/ai/plan, revise, quote, describe"]
       pipe["server/ai/pipeline.ts"]
       session["/api/demo/session"]
       reset["/api/internal/demo-reset"]
@@ -101,7 +103,7 @@ demo/state                                        last reset and the pinned demo
 
 ## The AI pipeline
 
-[src/server/ai/pipeline.ts](../src/server/ai/pipeline.ts) runs the same steps for all three calls:
+[src/server/ai/pipeline.ts](../src/server/ai/pipeline.ts) runs the same steps for all four calls:
 
 1. Verify the Firebase ID token.
 2. Check the rate limits. They're counted in Firestore, so they hold across instances.

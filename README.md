@@ -10,7 +10,7 @@ PlanCraft turns an event description into a budget and a task plan, and keeps th
 
 1. [What it does](#what-it-does)
 2. [Architecture](#architecture)
-3. [The three AI calls](#the-three-ai-calls)
+3. [The four AI calls](#the-four-ai-calls)
 4. [Google services used](#google-services-used)
 5. [AI tools used to build it](#ai-tools-used-to-build-it)
 6. [Human and GenAI work](#human-and-genai-work)
@@ -22,11 +22,11 @@ PlanCraft turns an event description into a budget and a task plan, and keeps th
 
 ## What it does
 
-The core loop: **create an event → answer a few questions → get a plan → change something → see the before/after → Apply → compare quotes.**
+The core loop: **describe and create an event → answer a few questions → get a plan → change something → see the before/after → Apply → compare quotes.**
 
 | Screen | Route | What you can do |
 |---|---|---|
-| Event creation | `/events/new` | Pick a use case, describe the event, type the budget as "8 lakh" or "€12.500" and see it read back, then answer a fixed set of questions |
+| Event creation | `/events/new` | Describe the event in your own words and let the AI fill in the form, or fill it yourself; type the budget as "8 lakh" or "€12.500" and see it read back; then answer a fixed set of questions |
 | Plan dashboard | `/events/[eventId]` | Budget lines with AI Estimate, Vendor Quoted or Confirmed labels; tasks with dependencies, deadlines and "Next up"; payments; notifications; team notes; a moodboard |
 | Revision | `/events/[eventId]/revise` | Change the budget, date or guests, or ask for a change in your own words. See every changed line and task, pick a trade-off option, then Apply or Discard |
 | Quotes | `/events/[eventId]/quotes` | Paste a quote. The AI reads it, and code checks the total, tax and currency, scores the fit and compares quotes side by side |
@@ -60,15 +60,16 @@ Gemini on Vertex AI (service account; no API key exists)
 | [src/app](src/app) | Routes only |
 | [tests](tests) | `unit/`, `property/`, `contract/`, `rules/`, `e2e/`, and AI fixtures in `fixtures/ai/` |
 
-## The three AI calls
+## The four AI calls
 
-There are exactly three, all through [src/server/ai/pipeline.ts](src/server/ai/pipeline.ts). The contracts are Zod schemas shared by the server and the browser. `z.toJSONSchema()` turns them into the Gemini response schema, so the types, the runtime check and the model contract can't drift apart.
+There are exactly four, all through [src/server/ai/pipeline.ts](src/server/ai/pipeline.ts). The contracts are Zod schemas shared by the server and the browser. `z.toJSONSchema()` turns them into the Gemini response schema, so the types, the runtime check and the model contract can't drift apart.
 
 | Call | Contract | Rules checked after Zod | Model settings | If it fails (spec §7.6) |
 |---|---|---|---|---|
 | `POST /api/ai/plan` | [plan-contract.ts](src/domain/plan-contract.ts): 3–25 lines with weights and cost ranges, 5–40 tasks with lead times, durations and dependencies, assumptions, open questions | P1–P8: unique keys, references resolve, no dependency loops, parts match, high ≥ low, at most one contingency line | temperature 0.4, 45 s | The event is saved. Retry, or start with an empty plan (categories only, no invented amounts) |
 | `POST /api/ai/revise` | [revision-contract.ts](src/domain/revision-contract.ts): an interpretation and up to 3 options, each a list of typed operations | R1–R8: bad options are dropped (for example R4: an option that touches a Confirmed line); at least 2 must remain when there is a shortfall | temperature 0.3, 30 s | The change calculated by code can still be applied. Retry, or edit the lines yourself |
 | `POST /api/ai/quote` | [quote-contract.ts](src/domain/quote-contract.ts): items, stated total, tax treatment, guests covered, inclusions, needs coverage, clarifications | Q1–Q2 fail the response. Q3–Q5 flag values that aren't found in the quote text | temperature 0, 30 s | The pasted text is saved. Retry, or enter the details by hand (the same checks run) |
+| `POST /api/ai/describe` | [describe-contract.ts](src/domain/describe-contract.ts): proposed form values from the user's description, with the budget copied as written | None fail the response; code drops values it can't trust: unknown country or currency, a date that isn't after today, a budget or guest count not in the text or that the amount parser can't read | temperature 0, 30 s | The form is unchanged; fill it in by hand |
 
 **What every call does:**
 
@@ -84,7 +85,7 @@ The prompts are in [src/server/ai/prompts](src/server/ai/prompts). How they chan
 
 | Service | What it does here |
 |---|---|
-| **Gemini on Vertex AI** (`gemini-3.8-flash`, `global` location) | The three AI calls, in JSON mode with a response schema. Reached with the App Hosting service account, so there is no AI API key |
+| **Gemini on Vertex AI** (`gemini-3.8-flash`, `global` location) | The four AI calls, in JSON mode with a response schema. Reached with the App Hosting service account, so there is no AI API key |
 | **Firebase App Hosting** (on Cloud Run) | Builds and serves the Next.js app and its API routes from `main` |
 | **Firebase Authentication** | Google sign-in, and custom-token sign-in to the shared demo account |
 | **Cloud Firestore** | Each user's events and quotes, with offline cache and live updates; server-only rate-limit counters (with TTL) and demo state |
@@ -301,8 +302,9 @@ Every EM, AI, UX and ENG requirement in [the spec](3.%20Product-specification-v3
 | AI-07 | MUST | No dummy data as the basis for answers | [seed.ts](src/demo/seed.ts) (inputs only) | [event-input.test.ts](tests/unit/event-input.test.ts) | Built |
 | AI-08 | MUST | Covered by UX-09, EM-19 and EM-35 | [budget-lines.tsx](src/features/dashboard/budget-lines.tsx) | [plan.spec.ts](tests/e2e/plan.spec.ts) | Merged |
 | AI-09 | MUST | Nothing the AI proposes takes effect without Apply | [proposal.ts](src/domain/proposal.ts) | [proposal.test.ts](tests/unit/proposal.test.ts) | Built |
-| AI-10 | MUST | Exactly three AI calls, each listed with its purpose | [pipeline.ts](src/server/ai/pipeline.ts) | [ai-pipeline.test.ts](tests/unit/ai-pipeline.test.ts) | Built |
+| AI-10 | MUST | Exactly four AI calls (three in the spec, plus describe, AI-13), each listed with its purpose | [pipeline.ts](src/server/ai/pipeline.ts) | [ai-pipeline.test.ts](tests/unit/ai-pipeline.test.ts) | Built |
 | AI-11 | MUST | Every AI output is checked against its schema and rules | [pipeline.ts](src/server/ai/pipeline.ts) | [plan.test.ts](tests/contract/plan.test.ts), [revise.test.ts](tests/contract/revise.test.ts), [quote.test.ts](tests/contract/quote.test.ts) | Built |
+| AI-13 | SHOULD | "Fill in the form from my description": the AI copies values, code checks them and fills only empty fields | [describe-contract.ts](src/domain/describe-contract.ts), [details-step.tsx](src/features/event-create/details-step.tsx) | [describe.test.ts](tests/contract/describe.test.ts), [describe-fill.test.ts](tests/unit/describe-fill.test.ts), [event-create.spec.ts](tests/e2e/event-create.spec.ts) | Built |
 | AI-12 | MUST | The plan stays usable when the AI is down | [plan-generator.tsx](src/features/dashboard/plan-generator.tsx), [revision-page.tsx](src/features/revision/revision-page.tsx), [manual-quote-sheet.tsx](src/features/quotes/manual-quote-sheet.tsx) | [final-acceptance.spec.ts](tests/e2e/final-acceptance.spec.ts), [plan.spec.ts](tests/e2e/plan.spec.ts) | Built |
 
 ### UX and product quality

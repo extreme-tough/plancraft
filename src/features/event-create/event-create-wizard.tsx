@@ -21,12 +21,14 @@ import {
   type PartInput,
   type UseCase,
 } from "@/domain/event-input";
+import { DescribeResponseSchema, describeTextProblem, fillFromDescription } from "@/domain/describe-contract";
 import { suggestedCurrency } from "@/domain/regions";
 import { useSignedIn } from "@/features/auth/auth-provider";
+import { callAi } from "@/lib/ai-client";
 import { useLocale } from "@/lib/locale";
 import { localToday } from "@/lib/today";
 import { cn } from "@/lib/utils";
-import { DETAILS_FIELD_ORDER, DetailsStep, detailsFieldId } from "./details-step";
+import { DETAILS_FIELD_ORDER, DetailsStep, detailsFieldId, type DescribeState } from "./details-step";
 import { clearDraft, loadDraft, saveDraft, type Draft } from "./draft";
 import { QUESTIONS_FIELD_ORDER, QuestionsStep, questionFieldId } from "./questions-step";
 
@@ -73,7 +75,7 @@ function firstInvalid(errors: Record<string, string>, order: readonly string[]):
 
 /** The two-step event form (Figma "Event Creation"): details, then questions, then save. */
 export function EventCreateWizard(): React.ReactElement {
-  const { repository, isDemo } = useSignedIn();
+  const { repository, isDemo, user } = useSignedIn();
   const router = useRouter();
   const step = useSearchParams().get("step") === "2" ? 2 : 1;
   const locale = useLocale();
@@ -84,10 +86,16 @@ export function EventCreateWizard(): React.ReactElement {
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [describe, setDescribe] = useState<DescribeState>({ busy: false, message: null, error: null });
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
+  // The latest draft, for merging an AI result that arrives after the user kept typing.
+  const draftRef = useRef(draft);
 
-  useEffect(() => saveDraft(draft), [draft]);
+  useEffect(() => {
+    draftRef.current = draft;
+    saveDraft(draft);
+  }, [draft]);
 
   const detailsResult = validateEventDetails(draft.details, today, locale);
   const useCase = draft.details.useCase === "" ? null : draft.details.useCase;
@@ -202,6 +210,33 @@ export function EventCreateWizard(): React.ReactElement {
     setTouched(new Set());
     setAttempted({ 1: false, 2: false });
     setStatus(`Filled in the example: ${example.title}. Review it, then continue.`);
+  };
+
+  /** AI-13: read the description and fill the form's empty fields; the user checks them before continuing. */
+  const onFillFromDescription = async (): Promise<void> => {
+    const problem = describeTextProblem(draft.description);
+    if (problem) return setDescribe({ busy: false, message: null, error: problem });
+    setDescribe({ busy: true, message: null, error: null });
+    setStatus("Reading your description…");
+    const result = await callAi("/api/ai/describe", { text: draft.description, today }, DescribeResponseSchema, (force) => user.getIdToken(force));
+    if (!result.ok) {
+      setStatus("");
+      return setDescribe({ busy: false, message: null, error: result.error.message });
+    }
+    const current = draftRef.current;
+    const out = fillFromDescription({ details: current.details, answers: current.answers }, result.data, () => crypto.randomUUID());
+    setDraft({
+      ...current,
+      details: out.details,
+      answers: out.answers ?? current.answers,
+      answersEdited: current.answersEdited || out.answers !== null,
+    });
+    const message =
+      out.filled.length === 0
+        ? "Nothing new to fill in: the form already has these details, or the description doesn't state them. Fill in the rest yourself."
+        : `Filled in from your description: ${out.filled.join(", ")}. Check them below, then continue.`;
+    setStatus(message);
+    setDescribe({ busy: false, message, error: null });
   };
 
   const onContinue = (): void => {
@@ -343,6 +378,8 @@ export function EventCreateWizard(): React.ReactElement {
           onPartChange={onPartChange}
           description={draft.description}
           onDescription={(description) => setDraft((d) => ({ ...d, description }))}
+          describe={describe}
+          onFillFromDescription={() => void onFillFromDescription()}
         />
       )}
 

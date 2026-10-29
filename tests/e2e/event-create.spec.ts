@@ -167,6 +167,43 @@ test.describe("event creation (EM-01, EM-02)", () => {
     await expectNoSeriousA11yViolations(page);
   });
 
+  test("fills the form from the description, and the user checks it before continuing (AI-13)", async ({ page }) => {
+    test.slow(); // Demo sign-in, the describe call through the server (fixture provider), then step 2.
+    await openForm(page);
+    const fill = page.getByRole("button", { name: "Fill in the form from my description" });
+
+    // Too little text is refused before any call, with the message linked to the box.
+    const box = page.getByLabel(/Describe your event in your own words/);
+    await box.fill("A party");
+    await fill.click();
+    expect(await descriptions(box)).toContain("Describe your event in at least 20 characters first.");
+
+    await box.fill(
+      "Ananya and Rohan's wedding in Jaipur on 26 February, about 150 guests and a budget of ₹8 lakh, with a Mehendi evening for 60 " +
+        "the night before. Fully vegetarian food with a Jain counter; one grandparent uses a wheelchair.",
+    );
+    await fill.click();
+    // Shown under the button, and announced through the page's status region.
+    await expect(page.locator("span", { hasText: /^Filled in from your description: .*Check them below, then continue\.$/ })).toBeVisible(FIRST_LOAD);
+    await expect(page.getByRole("status").filter({ hasText: "Filled in from your description" })).toHaveCount(1);
+
+    await expect(page.getByRole("radio", { name: /^Wedding Ceremony/ })).toBeChecked();
+    await expect(page.getByLabel("Event name")).toHaveValue("Ananya & Rohan's wedding");
+    await expect(page.getByLabel("City")).toHaveValue("Jaipur");
+    await expect(page.getByRole("combobox", { name: "Country" })).toHaveValue("India");
+    await expect(page.getByRole("combobox", { name: "Currency" })).toHaveValue("INR");
+    await expect(page.getByLabel("Event date")).toHaveValue("2030-02-26");
+    // Code reads the budget the AI copied, exactly as when typed (EM-38).
+    expect(await descriptions(page.getByLabel("Total budget"))).toContain("Understood as ₹8,00,000");
+    await expect(page.getByLabel("Expected guests", { exact: true })).toHaveValue("150");
+    await expect(page.getByRole("list", { name: "Extra event parts" }).getByRole("textbox").first()).toHaveValue("Mehendi evening");
+    await expectNoSeriousA11yViolations(page);
+
+    // The step-2 answers were filled too; the description itself stays the event's description.
+    await page.getByRole("button", { name: "Continue to questions" }).click();
+    await expect(page.getByLabel(/Accessibility/)).toHaveValue(/step-free access/);
+  });
+
   test("step 2 can't be reached without valid details (EM-02)", async ({ page }) => {
     await page.goto("/events/new?step=2");
     await expect(page).toHaveURL(/\/events\/new$/, FIRST_LOAD);
