@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import { parseAmount } from "@/domain/amount-parser";
 import { addDays, isIsoDate } from "@/domain/dates";
 import {
@@ -83,6 +84,8 @@ interface Props {
   onAddPart: () => void;
   onRemovePart: (index: number) => void;
   onPartChange: (index: number, patch: Partial<PartInput>) => void;
+  description: string;
+  onDescription: (description: string) => void;
 }
 
 /** A white card, as in the Figma "Event Creation" frames. */
@@ -245,6 +248,28 @@ export function DetailsStep(props: Props): React.ReactElement {
                 placeholder="For example: Ananya & Rohan's wedding"
                 onChange={(e) => onChange({ occasion: e.target.value })}
                 onBlur={() => onBlur("occasion")}
+              />
+            )}
+          </FormField>
+        </FormCard>
+
+        {/* Free text for the plan call (EM-03, EM-07): sent to the AI as written, never parsed into the fields below. */}
+        <FormCard>
+          <FormField
+            id={id("description")}
+            label="Describe your event in your own words"
+            hint="The vibe, traditions, must-haves, anything unusual. The AI plans from this together with the details below."
+            optional
+            labelClassName="font-semibold text-base"
+          >
+            {(aria) => (
+              <Textarea
+                {...aria}
+                value={props.description}
+                maxLength={LIMITS.description}
+                rows={4}
+                placeholder="For example: A colourful outdoor wedding with a Mehendi evening the night before. Mostly vegetarian food, a few elderly relatives who need step-free access, and we'd love live folk music."
+                onChange={(e) => props.onDescription(e.target.value)}
               />
             )}
           </FormField>

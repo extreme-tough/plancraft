@@ -29,7 +29,6 @@ export const QUESTIONS_FIELD_ORDER = [
   "cultural",
   "accessibility",
   "venueConstraints",
-  "description",
 ] as const;
 
 export function questionFieldId(field: string): string {
@@ -195,16 +194,6 @@ export function QuestionsStep({
                   value={value.venueConstraints}
                   maxLength={LIMITS.longAnswer}
                   onChange={(e) => onChange({ venueConstraints: e.target.value })}
-                />
-              )}
-            </FormField>
-            <FormField id={id("description")} label="Anything else we should know?" optional error={errors.description}>
-              {(aria) => (
-                <Textarea
-                  {...aria}
-                  value={value.description}
-                  maxLength={LIMITS.description}
-                  onChange={(e) => onChange({ description: e.target.value })}
                 />
               )}
             </FormField>

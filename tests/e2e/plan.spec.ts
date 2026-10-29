@@ -64,6 +64,24 @@ test.describe("plan generation (AI-01, EM-03)", () => {
     await expect(page.getByRole("heading", { level: 4, name: "Venue hire" })).toBeVisible(FIRST_LOAD);
     await expect(page.getByRole("button", { name: "Generate my plan" })).toHaveCount(0);
   });
+
+  test("the free-text description from step 1 goes to the AI as written (EM-03, EM-07)", async ({ page }) => {
+    test.slow();
+    const text = "A colourful outdoor wedding with live folk music and a mostly vegetarian menu.";
+    await page.goto("/events/new");
+    await page.getByRole("button", { name: "Jaipur wedding, ₹8 lakh" }).click(FIRST_LOAD);
+    await page.getByLabel(/Describe your event in your own words/).fill(text);
+    await page.getByRole("button", { name: "Continue to questions" }).click();
+    // Asked once, on step 1: the questions step no longer has its own free-text box.
+    await expect(page.getByRole("heading", { level: 1, name: "A few questions" })).toBeVisible(FIRST_LOAD);
+    await expect(page.getByLabel(/Anything else we should know/)).toHaveCount(0);
+    await page.getByRole("button", { name: "Create event" }).click();
+
+    const requestPromise = page.waitForRequest((r) => r.url().endsWith("/api/ai/plan") && r.method() === "POST");
+    await page.getByRole("button", { name: "Generate my plan" }).click(FIRST_LOAD);
+    const sent = (await requestPromise).postDataJSON() as { description: string };
+    expect(sent.description).toBe(text);
+  });
 });
 
 test.describe("plan generation fallbacks (spec §7.6, AI-12)", () => {

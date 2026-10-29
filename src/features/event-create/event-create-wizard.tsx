@@ -36,7 +36,7 @@ const NEW_EVENT_PATH = "/events/new";
 const INTRO: Record<1 | 2, { title: string; text: string }> = {
   1: {
     title: "Let's plan your celebration",
-    text: "Tell us the essentials. Your budget and task plan are built from them.",
+    text: "Describe your event and tell us the essentials. Your budget and task plan are built from them.",
   },
   2: {
     title: "A few questions",
@@ -52,6 +52,7 @@ function initialDraft(): Draft {
       answersEdited: false,
       currencyAuto: false,
       useCaseAuto: false,
+      description: "",
     }
   );
 }
@@ -90,7 +91,8 @@ export function EventCreateWizard(): React.ReactElement {
 
   const detailsResult = validateEventDetails(draft.details, today, locale);
   const useCase = draft.details.useCase === "" ? null : draft.details.useCase;
-  const answers: AnswersInput | null = draft.answers ?? (useCase ? defaultAnswers(useCase) : null);
+  const baseAnswers = draft.answers ?? (useCase ? defaultAnswers(useCase) : null);
+  const answers: AnswersInput | null = baseAnswers && { ...baseAnswers, description: draft.description };
   const answersResult = answers ? validateAnswers(answers) : null;
 
   // Step 2 needs valid details; a stale link or a lost draft goes back to step 1.
@@ -195,6 +197,7 @@ export function EventCreateWizard(): React.ReactElement {
       answersEdited: true,
       currencyAuto: false,
       useCaseAuto: false,
+      description: example.answers.description,
     });
     setTouched(new Set());
     setAttempted({ 1: false, 2: false });
@@ -338,6 +341,8 @@ export function EventCreateWizard(): React.ReactElement {
           onAddPart={onAddPart}
           onRemovePart={onRemovePart}
           onPartChange={onPartChange}
+          description={draft.description}
+          onDescription={(description) => setDraft((d) => ({ ...d, description }))}
         />
       )}
 

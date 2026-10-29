@@ -25,6 +25,11 @@ export interface Draft {
   currencyAuto: boolean;
   /** The use case was suggested by the occasion, so picking another occasion may replace it. */
   useCaseAuto: boolean;
+  /**
+   * The free-text description from step 1. Kept apart from `answers` so a use-case change, which
+   * resets the answers to that use case's defaults, never wipes it; it joins the answers on save.
+   */
+  description: string;
 }
 
 const KEY = "plancraft:event-draft";
@@ -60,6 +65,8 @@ const DraftSchema = z.object({
   answersEdited: z.boolean(),
   currencyAuto: z.boolean(),
   useCaseAuto: z.boolean(),
+  // A draft saved before this field existed has none.
+  description: text.default(""),
 });
 
 export function loadDraft(): Draft | null {
