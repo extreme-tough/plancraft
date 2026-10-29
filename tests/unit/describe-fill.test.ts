@@ -55,6 +55,14 @@ describe("fillFromDescription (AI-13)", () => {
     });
     expect(out.filled).toContain("budget");
     expect(out.filled).toContain("1 extra part");
+    expect(out.missing).toEqual([]);
+  });
+
+  it("lists the required fields the description didn't cover, in form order", () => {
+    const partial = response({ city: null, country: null, eventDate: null, budgetText: null, guestCount: null });
+    const out = fillFromDescription({ details: emptyEventDetails(), answers: null }, partial, makeId);
+    expect(out.missing.map((m) => m.field)).toEqual(["city", "country", "eventDate", "currency", "budget", "guestCount"]);
+    expect(out.missing.map((m) => m.label)).toEqual(["city", "country", "date", "currency", "budget", "guests"]);
   });
 
   it("never overwrites what the user typed", () => {
@@ -73,5 +81,6 @@ describe("fillFromDescription (AI-13)", () => {
     expect(out.details).toEqual(emptyEventDetails());
     expect(out.answers).toBeNull();
     expect(out.filled).toEqual([]);
+    expect(out.missing).toHaveLength(9);
   });
 });

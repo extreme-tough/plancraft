@@ -1,0 +1,20 @@
+{
+  "eventType": "wedding",
+  "useCase": "wedding",
+  "occasion": "Ananya & Rohan's wedding",
+  "city": null,
+  "country": null,
+  "eventDate": null,
+  "currency": null,
+  "budgetText": null,
+  "guestCount": null,
+  "parts": [{ "name": "Mehendi evening", "guestCount": null }],
+  "priorities": ["catering", "entertainment", "photography"],
+  "mustHaves": ["Indoor backup for cold February evenings", "Live dhol and folk musicians for the baraat"],
+  "experience": null,
+  "atmosphere": "Traditional Rajasthani, outdoor lawn with marigold décor",
+  "ageGroups": ["adults", "seniors"],
+  "cultural": "Fully vegetarian, with a separate Jain counter for about 20 guests",
+  "accessibility": "A grandparent uses a wheelchair: step-free access and seating near the stage",
+  "venueConstraints": "Outdoor lawn with an indoor backup"
+}

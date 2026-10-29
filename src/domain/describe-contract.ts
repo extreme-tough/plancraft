@@ -114,6 +114,26 @@ export interface FormInputs {
 export interface Filled extends FormInputs {
   /** Names of the fields that got a value, for the status message. */
   filled: string[];
+  /** Required step-1 fields still empty afterwards, in form order, so the user knows what to add. */
+  missing: Array<{ field: RequiredField; label: string }>;
+}
+
+/** Step 1's required fields, in form order, with the words the status message uses. */
+const REQUIRED: ReadonlyArray<readonly [RequiredField, string]> = [
+  ["eventType", "occasion type"],
+  ["useCase", "plan style"],
+  ["occasion", "event name"],
+  ["city", "city"],
+  ["country", "country"],
+  ["eventDate", "date"],
+  ["currency", "currency"],
+  ["budget", "budget"],
+  ["guestCount", "guests"],
+];
+type RequiredField = Exclude<keyof EventDetailsInput, "parts">;
+
+export function missingDetails(details: EventDetailsInput): Filled["missing"] {
+  return REQUIRED.filter(([field]) => details[field].trim() === "").map(([field, label]) => ({ field, label }));
 }
 
 /**
@@ -146,7 +166,7 @@ export function fillFromDescription(form: FormInputs, response: DescribeResponse
   }
 
   const base = form.answers ?? (d.useCase ? defaultAnswers(d.useCase) : null);
-  if (!base) return { details: d, answers: null, filled };
+  if (!base) return { details: d, answers: null, filled, missing: missingDetails(d) };
   const a = { ...base };
   const text = (key: "atmosphere" | "cultural" | "accessibility" | "venueConstraints", value: string | null, label: string): void => {
     if (value === null || a[key].trim() !== "") return;
@@ -176,5 +196,5 @@ export function fillFromDescription(form: FormInputs, response: DescribeResponse
   text("cultural", response.cultural, "cultural needs");
   text("accessibility", response.accessibility, "accessibility needs");
   text("venueConstraints", response.venueConstraints, "venue constraints");
-  return { details: d, answers: a, filled };
+  return { details: d, answers: a, filled, missing: missingDetails(d) };
 }

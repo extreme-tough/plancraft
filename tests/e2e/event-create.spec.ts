@@ -204,6 +204,27 @@ test.describe("event creation (EM-01, EM-02)", () => {
     await expect(page.getByLabel(/Accessibility/)).toHaveValue(/step-free access/);
   });
 
+  test("says what the description left out, and marks those fields (AI-13)", async ({ page }) => {
+    test.slow();
+    await openForm(page);
+    // No city, date, budget or guest total: those are never guessed.
+    await page
+      .getByLabel(/Describe your event in your own words/)
+      .fill(
+        "A traditional Rajasthani wedding for Ananya and Rohan, with a Mehendi evening the night before and an outdoor lawn with " +
+          "marigold décor. Fully vegetarian, with a Jain counter for about 20 guests.",
+      );
+    await page.getByRole("button", { name: "Fill in the form from my description" }).click();
+    await expect(
+      page.locator("span", { hasText: /Still needed: city, country, date, currency, budget and guests\.$/ }),
+    ).toBeVisible(FIRST_LOAD);
+    await expect(page.getByLabel("Event name")).toHaveValue("Ananya & Rohan's wedding");
+    await expect(page.getByLabel("Expected guests", { exact: true })).toHaveValue("");
+    expect(await descriptions(page.getByLabel("Total budget"))).toContain("Enter the total budget.");
+    expect(await descriptions(page.getByLabel("Expected guests", { exact: true }))).toContain("Enter the number of guests.");
+    await expectNoSeriousA11yViolations(page);
+  });
+
   test("step 2 can't be reached without valid details (EM-02)", async ({ page }) => {
     await page.goto("/events/new?step=2");
     await expect(page).toHaveURL(/\/events\/new$/, FIRST_LOAD);

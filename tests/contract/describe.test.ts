@@ -28,6 +28,10 @@ describe("describe contract: the recorded fixture", () => {
     });
   });
 
+  it("passes the schema with the partial fixture too (no city, date, budget or guest total)", () => {
+    expect(validate(readFileSync("tests/fixtures/ai/describe/partial.json", "utf8"))).toMatchObject({ ok: true, data: { budgetText: null, guestCount: null } });
+  });
+
   it("generates a provider schema with no label field and no $ref or oneOf (Gemini subset)", () => {
     const schema = JSON.stringify(toProviderSchema(DescribeResponseSchema));
     expect(schema).not.toMatch(/"\$ref"|"oneOf"|"label"/);

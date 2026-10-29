@@ -59,6 +59,11 @@ function initialDraft(): Draft {
   );
 }
 
+/** "city, date and budget". */
+function listText(items: readonly string[]): string {
+  return items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
+
 /** Moves focus to a field, or to the first option of a radio or checkbox group. */
 function focusField(id: string): void {
   const element = document.getElementById(id);
@@ -231,10 +236,16 @@ export function EventCreateWizard(): React.ReactElement {
       answers: out.answers ?? current.answers,
       answersEdited: current.answersEdited || out.answers !== null,
     });
-    const message =
+    // Required fields the description didn't cover show their usual "Enter the …" errors.
+    setTouched((t) => new Set([...t, ...out.missing.map((m) => m.field)]));
+    const filledText =
       out.filled.length === 0
-        ? "Nothing new to fill in: the form already has these details, or the description doesn't state them. Fill in the rest yourself."
-        : `Filled in from your description: ${out.filled.join(", ")}. Check them below, then continue.`;
+        ? "Nothing new to fill in: the form already has these details, or the description doesn't state them."
+        : `Filled in from your description: ${out.filled.join(", ")}.`;
+    const message =
+      out.missing.length === 0
+        ? `${filledText} Check them below, then continue.`
+        : `${filledText} Still needed: ${listText(out.missing.map((m) => m.label))}.`;
     setStatus(message);
     setDescribe({ busy: false, message, error: null });
   };
