@@ -22,7 +22,7 @@ Gemini (gemini-3.8-flash) on Vertex AI makes exactly three calls: plan generatio
 | 2 | 3–7 | Create-event screen ("Let's plan your celebration", with the Try-an-example chips) | "Describe your event in your own words: '₹8 lakh, 150 guests, Jaipur'" |
 | 3 | 7–11 | Dashboard: the wedding card and the budget meter | "Gemini drafts the plan. Code checks every rupee." |
 | 4 | 11–15 | Task timeline with "After: …" dependencies and due dates | "Tasks, dependencies and deadlines, worked out for you" |
-| 5 | 15–19 | Quote card: "Gap of ₹10,000: possible hidden or missing charge" and "Fit score: 61 of 100" | "Vendor quotes checked for hidden charges" |
+| 5 | 15–19 | Quote card: "Gap of ₹10,000: possible hidden or missing charge" and the fit score | "Vendor quotes checked for hidden charges" |
 | 6 | 19–23 | Back to the setup photo, or the dashboard | "PlanCraft · Gemini on Vertex AI + Firebase · #PromptWars" |
 
 **Caption:**
