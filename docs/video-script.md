@@ -6,7 +6,7 @@
 
 1. Run `pnpm demo:reset`, so the demo event has a fresh live plan.
 2. Use a private browser window at 1280 × 800.
-3. Record from the live URL: https://plancraft--plant-care-copilot.asia-southeast1.hosted.app
+3. Record from the live URL: https://plancraft--plancraft-96a8f.asia-southeast1.hosted.app
 4. Don't upload the video to the repo (ENG-10). Use unlisted YouTube or Google Drive.
 
 | # | Scene | Steps | Caption | Shows |

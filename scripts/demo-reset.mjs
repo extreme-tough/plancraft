@@ -7,11 +7,11 @@ import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-const PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? "plant-care-copilot";
+const PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? "plancraft-96a8f";
 const LOCATION = process.env.DEMO_RESET_LOCATION ?? "asia-southeast1";
 const JOB = `projects/${PROJECT}/locations/${LOCATION}/jobs/plancraft-demo-reset`;
 const API = "https://cloudscheduler.googleapis.com/v1";
-const APP = process.env.DEMO_URL ?? "https://plancraft--plant-care-copilot.asia-southeast1.hosted.app";
+const APP = process.env.DEMO_URL ?? "https://plancraft--plancraft-96a8f.asia-southeast1.hosted.app";
 
 async function accessToken() {
   if (process.env.GOOGLE_OAUTH_ACCESS_TOKEN) return process.env.GOOGLE_OAUTH_ACCESS_TOKEN;

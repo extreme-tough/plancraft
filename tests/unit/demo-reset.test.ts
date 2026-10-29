@@ -117,7 +117,7 @@ describe("nightly demo reset (EM-63)", () => {
 
 describe("Cloud Scheduler's OIDC token on the reset route (EM-63)", () => {
   const AUDIENCE = "https://plancraft.example.app/api/internal/demo-reset";
-  const INVOKER = "demo-reset@plant-care-copilot.iam.gserviceaccount.com";
+  const INVOKER = "demo-reset@plancraft-96a8f.iam.gserviceaccount.com";
   const expected = { audience: AUDIENCE, invoker: INVOKER };
 
   async function signer() {

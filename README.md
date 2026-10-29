@@ -2,7 +2,7 @@
 
 PlanCraft turns an event description into a budget and a task plan, and keeps that plan right when things change. When the budget, date or guest count changes, or you ask for something in plain words, it shows a before/after view of every line and task affected. Nothing changes until you press Apply. It also reads vendor quotes, checks their arithmetic and tax, and compares them against the budget line.
 
-- **Live app:** https://plancraft--plant-care-copilot.asia-southeast1.hosted.app. Opening it signs you in to a shared demo account with a sample wedding plan (₹8 lakh, 150 guests in Jaipur). The demo is rebuilt every night at 3:00 AM IST.
+- **Live app:** https://plancraft--plancraft-96a8f.asia-southeast1.hosted.app. Opening it signs you in to a shared demo account with a sample wedding plan (₹8 lakh, 150 guests in Jaipur). The demo is rebuilt every night at 3:00 AM IST.
 - **Built for:** PromptWars Challenge 5 (Celebration and Event Planner SaaS).
 - **Sources of truth:** [the product spec](3.%20Product-specification-v3-mvp.md) (requirements by ID), [the implementation plan](4.%20Implementation%20Plan.md) and [DESIGN.md](DESIGN.md).
 

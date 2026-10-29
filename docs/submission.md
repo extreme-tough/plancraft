@@ -54,7 +54,7 @@ What I cared about:
 
 Built on Google Cloud: Gemini on Vertex AI, Firebase App Hosting, Authentication, Firestore, Storage and Cloud Scheduler.
 
-Try it (no sign-up): https://plancraft--plant-care-copilot.asia-southeast1.hosted.app
+Try it (no sign-up): https://plancraft--plancraft-96a8f.asia-southeast1.hosted.app
 Code: https://github.com/extreme-tough/plancraft
 
 #GenAI #Gemini #Firebase #GoogleCloud #BuildWithAI

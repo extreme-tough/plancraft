@@ -83,7 +83,7 @@ gcloud iam service-accounts create demo-reset --display-name "PlanCraft demo res
 gcloud scheduler jobs create http plancraft-demo-reset   --project <PROJECT_ID> --location asia-southeast1   --schedule "0 3 * * *" --time-zone "Asia/Kolkata"   --http-method POST --uri "https://<BACKEND_URL>/api/internal/demo-reset"   --oidc-service-account-email "demo-reset@<PROJECT_ID>.iam.gserviceaccount.com"   --oidc-token-audience "https://<BACKEND_URL>/api/internal/demo-reset"   --attempt-deadline 600s --max-retry-attempts 3 --min-backoff 300s --max-backoff 300s --max-doublings 0
 ```
 
-The service account needs no roles: the app itself checks the token, and the backend is public. Whoever creates the job needs `iam.serviceAccounts.actAs` on it (project Owner and Editor have it). Then set the two variables in `apphosting.yaml` (already done for `plant-care-copilot`):
+The service account needs no roles: the app itself checks the token, and the backend is public. Whoever creates the job needs `iam.serviceAccounts.actAs` on it (project Owner and Editor have it). Then set the two variables in `apphosting.yaml` (already done for `plancraft-96a8f`):
 
 ```yaml
 - variable: DEMO_RESET_INVOKER
