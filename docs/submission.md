@@ -10,7 +10,37 @@ PlanCraft turns an event description into a budget and task plan, and keeps it r
 
 Gemini (gemini-3.8-flash) on Vertex AI makes exactly three calls: plan generation, revision trade-offs and quote extraction. Each uses JSON mode with a response schema generated from the same Zod contract the server validates against, plus rule checks (no dependency loops, no changes to Confirmed costs) and one repair attempt; output that fails is never shown. The AI never does arithmetic: it returns weights, ranges and typed operations, and code calculates every amount, total and deadline. Vertex AI is reached with the App Hosting service account, so no AI API key exists. Google services: Firebase App Hosting (Cloud Run) for the Next.js app and API, Firebase Authentication (Google sign-in and a custom-token demo account), Cloud Firestore (per-user data, rate limits), Cloud Storage (moodboard), Cloud Scheduler (nightly demo rebuilt by live Gemini). Built with Claude Code.
 
-## LinkedIn post
+## Instagram Reel
+
+**Format:** 9:16 (1080 × 1920), 20–25 seconds, with on-screen text and no voice-over. The app screens are full-screen screenshots of the live demo at phone size. Keep the media out of the repo (ENG-10).
+
+**Brief idea (for the Reel's opening text or the form):** PlanCraft is an event planner that keeps your plan right when things change. Describe your event and budget in your own words; Gemini drafts the budget and task plan, and code checks every number. Change the budget, date or guests and you see a before/after of everything affected before you apply it. It also checks vendor quotes for hidden charges.
+
+| # | Seconds | Visual | On-screen text |
+|---|---|---|---|
+| 1 | 0–3 | **Your setup photo:** your laptop with the PlanCraft dashboard open, and your phone beside it showing the mobile view | "I built an event planner that adapts when plans change" |
+| 2 | 3–7 | Create-event screen ("Let's plan your celebration", with the Try-an-example chips) | "Describe your event in your own words: '₹8 lakh, 150 guests, Jaipur'" |
+| 3 | 7–11 | Dashboard: the wedding card and the budget meter | "Gemini drafts the plan. Code checks every rupee." |
+| 4 | 11–15 | Task timeline with "After: …" dependencies and due dates | "Tasks, dependencies and deadlines, worked out for you" |
+| 5 | 15–19 | Quote card: "Gap of ₹10,000: possible hidden or missing charge" and "Fit score: 61 of 100" | "Vendor quotes checked for hidden charges" |
+| 6 | 19–23 | Back to the setup photo, or the dashboard | "PlanCraft · Gemini on Vertex AI + Firebase · #PromptWars" |
+
+**Caption:**
+
+Plans change. Your event plan should keep up. 🎉
+
+For #PromptWars Challenge 5 I built PlanCraft: describe your event and budget in plain words, and get a budget and task plan you can actually run. When the budget, date or guest list changes, you see a before/after of everything affected, and nothing changes until you press Apply.
+
+✅ Gemini drafts the plan; code does every sum, in any currency
+🔒 Confirmed costs are locked
+🧾 Vendor quotes checked for hidden charges and unclear tax
+♿ Works by keyboard, accessibility-tested
+
+Built on Google Cloud: Gemini on Vertex AI, Firebase App Hosting, Auth, Firestore, Storage and Cloud Scheduler. Try it with no sign-up (link in bio).
+
+#PromptWars #GenAI #Gemini #Firebase #GoogleCloud #BuildWithAI #WeddingPlanning #EventPlanning
+
+## LinkedIn post (not used: the Instagram Reel replaces it)
 
 I built PlanCraft for #PromptWars Challenge 5: an event planner that keeps your plan right when things change.
 

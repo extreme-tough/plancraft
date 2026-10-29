@@ -81,6 +81,11 @@ test("three sample quotes: gap, unclear tax and currency flags, then link and co
   await expectNoSeriousA11yViolations(page);
   if (test.info().project.name === "mobile") {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    // A wrapped badge ("Gap of ₹10,000: …") keeps its text inside its background.
+    const overflowing = await page.$$eval("[data-slot=badge]", (badges) =>
+      badges.filter((b) => b.scrollHeight > b.clientHeight + 1).map((b) => b.textContent),
+    );
+    expect(overflowing).toEqual([]);
   }
 
   // EM-41: the user links, then confirms. Nothing is booked or sent (EM-36).

@@ -220,7 +220,7 @@ export function RevisionPage({ eventId, proposalId }: { eventId: string; proposa
           ))}
           {proposal.requestText && (
             <li>
-              <Badge variant="outline" size="lg" className="max-w-full whitespace-normal text-start">
+              <Badge variant="outline" size="lg" className="h-auto max-w-full justify-start whitespace-normal py-0.5 text-start sm:h-auto">
                 Your request: &ldquo;{proposal.requestText}&rdquo;
               </Badge>
             </li>

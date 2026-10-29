@@ -58,7 +58,8 @@ export function TotalCheckBadge({ check, currency, locale }: { check: TotalCheck
       );
     case "gap":
       return (
-        <Badge variant="error" className="whitespace-normal text-destructive-foreground">
+        // Long enough to wrap at 360 px: drop the badge's fixed height so the background grows with the text.
+        <Badge variant="error" className="h-auto justify-start whitespace-normal py-0.5 text-start text-destructive-foreground sm:h-auto">
           <CircleAlert aria-hidden="true" />
           Gap of {formatMoneyWhole(Math.abs(check.difference), currency, locale)}: possible hidden or missing charge
         </Badge>
