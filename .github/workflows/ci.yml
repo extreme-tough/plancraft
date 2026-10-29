@@ -29,6 +29,8 @@ jobs:
       - run: pnpm typecheck
       # Unit, property and contract tests, with the src/domain coverage gate (ENG-07).
       - run: pnpm test:coverage
+      # ENG-09: every spec requirement has a README row, and every linked file exists.
+      - run: pnpm check:readme
       - run: pnpm check:size
 
   rules:

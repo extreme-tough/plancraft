@@ -19,6 +19,7 @@
     "test:e2e": "firebase emulators:exec --only auth,firestore,storage --project demo-plancraft \"playwright test\"",
     "check:size": "node scripts/check-repo-size.mjs",
     "check:bundle": "node scripts/check-bundle-size.mjs",
+    "check:readme": "node scripts/check-readme-ids.mjs",
     "demo:reset": "node scripts/demo-reset.mjs"
   },
   "dependencies": {
