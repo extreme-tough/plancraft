@@ -153,6 +153,29 @@ export function DetailsStep(props: Props): React.ReactElement {
   return (
     <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="flex min-w-0 flex-col gap-5">
+        {/* First, so people start by telling the story. Free text for the plan call (EM-03, EM-07): sent to the
+            AI as written, never parsed into the fields below, which stay exact because code calculates from them. */}
+        <FormCard>
+          <FormField
+            id={id("description")}
+            label="Describe your event in your own words"
+            hint="The more you tell us, the more personal the plan: the vibe, traditions, food, music, who's coming and any needs, must-haves and things to skip. The AI plans from this together with the details below."
+            optional
+            labelClassName="font-semibold text-base"
+          >
+            {(aria) => (
+              <Textarea
+                {...aria}
+                value={props.description}
+                maxLength={LIMITS.description}
+                rows={5}
+                placeholder="For example: A colourful outdoor wedding with a Mehendi evening the night before. Mostly vegetarian food, a few elderly relatives who need step-free access, and we'd love live folk music."
+                onChange={(e) => props.onDescription(e.target.value)}
+              />
+            )}
+          </FormField>
+        </FormCard>
+
         <FormCard>
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -248,28 +271,6 @@ export function DetailsStep(props: Props): React.ReactElement {
                 placeholder="For example: Ananya & Rohan's wedding"
                 onChange={(e) => onChange({ occasion: e.target.value })}
                 onBlur={() => onBlur("occasion")}
-              />
-            )}
-          </FormField>
-        </FormCard>
-
-        {/* Free text for the plan call (EM-03, EM-07): sent to the AI as written, never parsed into the fields below. */}
-        <FormCard>
-          <FormField
-            id={id("description")}
-            label="Describe your event in your own words"
-            hint="The vibe, traditions, must-haves, anything unusual. The AI plans from this together with the details below."
-            optional
-            labelClassName="font-semibold text-base"
-          >
-            {(aria) => (
-              <Textarea
-                {...aria}
-                value={props.description}
-                maxLength={LIMITS.description}
-                rows={4}
-                placeholder="For example: A colourful outdoor wedding with a Mehendi evening the night before. Mostly vegetarian food, a few elderly relatives who need step-free access, and we'd love live folk music."
-                onChange={(e) => props.onDescription(e.target.value)}
               />
             )}
           </FormField>
